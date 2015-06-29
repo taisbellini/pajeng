@@ -73,7 +73,7 @@ SPACE: ' ' -> skip;
 TAB: '\t' -> skip;
 fragment DIGIT: [0-9];
 
-COMMENT: '#.*\n' -> skip; 
+COMMENT: '#' ~('\r' | '\n')* '\n' -> skip;
 
 TK_EVENT_DEF: '%';
 TK_EVENT_DEF_BEGIN: '%EventDef';
