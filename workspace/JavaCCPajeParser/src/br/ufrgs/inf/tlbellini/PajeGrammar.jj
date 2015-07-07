@@ -98,7 +98,7 @@ TOKEN :
 | < FLOAT : (< DIGIT >)+"."(< DIGIT >)+ >| < #DIGIT : [ "0"-"9" ] >
 | <STRING: "\"" (<LETTER> | < DIGIT > |  " ")* "\"" | (<LETTER> | <DIGIT>)+>
 | <CHAR : (~["\""] | "\\" (["n","r","\\","\'","\""])) >
-| < #LETTER : ["a"-"z", "A"-"Z", "-", "_"]  >}int paje() :{}{  declarations() events() < EOF >
+| < #LETTER : ["a"-"z", "A"-"Z", "-", "_", "."]  >}int paje() :{}{  declarations() events() < EOF >
   {    return 4;  }  }void declarations() :{PajeEventDefinition newDef;}{
   (
     newDef = declaration()  	{eventDefinitions.add(newDef);}
