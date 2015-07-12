@@ -10,6 +10,8 @@ import java.util.ArrayList;
 public class PajeGrammar{
 
   public static ArrayList<PajeEventDefinition> eventDefinitions = new ArrayList<PajeEventDefinition>(); 
+  static PajeSimulator simulator = new PajeSimulator();
+
 
   public static void main(String args []) throws ParseException, FileNotFoundException  {
 	FileInputStream input;
@@ -19,12 +21,9 @@ public class PajeGrammar{
     {
       System.out.println("Input the file path: ");
       input = new FileInputStream(sc.nextLine());    }
-    long startTime = System.currentTimeMillis();    PajeGrammar parser = new PajeGrammar(input);
+    long startTime = System.currentTimeMillis();
+    simulator.init();    PajeGrammar parser = new PajeGrammar(input);
                 try      {        switch (parser.paje())        {          case 4 :            long endTime = System.currentTimeMillis();
-          for(PajeEventDefinition def : eventDefinitions)
-          {
-          	System.out.println(def.uniqueID + " " + def.pajeEventId + "First field" + def.fields.get(0).getField());
-          }
           System.out.println("OK. Finished in: " + (endTime - startTime) +"ms");
           break;          case 1 :           System.out.println("Goodbye.");          break;          default :           break;        }      }      catch (Exception e)      {        System.out.println("NOK.");        System.out.println(e.getMessage());
       }      catch (Error e)      {        System.out.println("Oops.");        System.out.println(e.getMessage());      }    }}PARSER_END(PajeGrammar)SKIP :{  " "| "\r"| "\t"
@@ -98,7 +97,7 @@ TOKEN :
 | < FLOAT : (< DIGIT >)+"."(< DIGIT >)+ >| < #DIGIT : [ "0"-"9" ] >
 | <STRING: "\"" (<LETTER> | < DIGIT > |  " ")* "\"" | (<LETTER> | <DIGIT>)+>
 | <CHAR : (~["\""] | "\\" (["n","r","\\","\'","\""])) >
-| < #LETTER : ["a"-"z", "A"-"Z", "-", "_", "."]  >}int paje() :{}{  declarations() events() < EOF >
+| < #LETTER : ["a"-"z", "A"-"Z", "-", "_", "."]  >}int paje() throws Exception:{}{  declarations() events() < EOF >
   {    return 4;  }  }void declarations() :{PajeEventDefinition newDef;}{
   (
     newDef = declaration()  	{eventDefinitions.add(newDef);}
@@ -195,16 +194,26 @@ PajeFieldType field_type():{}
 	< EVENT_DEF_FIELD_TYPE_INT >{ return PajeFieldType.PAJE_int; } |
 	< EVENT_DEF_FIELD_TYPE_HEX >{ return PajeFieldType.PAJE_hex; } |
 	< EVENT_DEF_FIELD_TYPE_DATE >{ return PajeFieldType.PAJE_date; } |
-	< EVENT_DEF_FIELD_TYPE_COLOR >{ return PajeFieldType.PAJE_color; }}void events() :{}{
+	< EVENT_DEF_FIELD_TYPE_COLOR >{ return PajeFieldType.PAJE_color; }}void events() throws Exception:{}{
   (event())*}
-void event() :
+void event() throws Exception:
 {}
 {	non_empty_event() | < BREAK >
 }
 
-void non_empty_event():
-{}
-{  {PajeTraceEvent event = new PajeTraceEvent();} < INT >  {ArrayList<String> fields; } fields = arguments() <  BREAK >  {}
+void non_empty_event() throws Exception:
+{
+	PajeTraceEvent event = new PajeTraceEvent();
+ 	Token id; 
+}
+{  id = < INT >  {
+  	ArrayList<String> fields;
+  	event.setPajeEventDef(Integer.parseInt(id.image), eventDefinitions); 
+  } 
+  fields = arguments() <  BREAK >  {
+  	event.setFields(fields);
+  	simulator.simulate(event);
+  }
 }
 
 ArrayList<String> arguments():{
@@ -221,7 +230,7 @@ ArrayList<String> arguments():{
 
 String argument():
 {Token arg;}
-{	arg = < STRING > {return arg.image; } 
+{	arg = < STRING > {return arg.image.toString(); } 
 	|arg = < FLOAT > {return arg.image.toString(); } 
 	|arg = < INT > {return arg.image.toString(); }
 }  

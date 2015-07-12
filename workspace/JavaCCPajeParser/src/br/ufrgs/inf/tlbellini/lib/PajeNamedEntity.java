@@ -4,8 +4,9 @@ public class PajeNamedEntity extends PajeDoubleTimedEntity {
 	
 	private String name;
 
-	public PajeNamedEntity() {
-		// TODO Auto-generated constructor stub
+	public PajeNamedEntity(PajeContainer container, PajeType type, double time, String name, PajeTraceEvent event){
+		super(container, type, time, event);
+		this.setName(name);
 	}
 
 	public String getName() {

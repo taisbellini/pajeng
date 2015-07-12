@@ -8,6 +8,11 @@ public class PajeDoubleTimedEntity extends PajeSingleTimedEntity {
 		// TODO Auto-generated constructor stub
 	}
 
+	public PajeDoubleTimedEntity(PajeContainer container, PajeType type, double time, PajeTraceEvent event) {
+		super(container, type, time, event);
+		this.endTime = -1;
+	}
+
 	public double getEndTime() {
 		return endTime;
 	}

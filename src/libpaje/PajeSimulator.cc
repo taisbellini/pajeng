@@ -180,7 +180,7 @@ void PajeSimulator::inputEntity (PajeObject *data)
   PajeEventId eventId = event->pajeEventId();
   if (eventId < PajeEventIdCount){
     if (invocation[eventId]){
-      CALL_MEMBER_PAJE_SIMULATOR(*this,invocation[eventId])(event);
+      CALL_MEMBER_PAJE_SIMULATOR(*this,invoc    ation[eventId])(event);
     }
   }else{
     throw PajeSimulationException ("Unknow event id.");
