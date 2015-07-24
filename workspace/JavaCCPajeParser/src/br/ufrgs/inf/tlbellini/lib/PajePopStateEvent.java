@@ -2,8 +2,8 @@ package br.ufrgs.inf.tlbellini.lib;
 
 public class PajePopStateEvent extends PajeStateEvent {
 
-	public PajePopStateEvent() {
-		// TODO Auto-generated constructor stub
+	public PajePopStateEvent(PajeTraceEvent event, PajeContainer container, PajeType type) {
+		super(event, container, type);
 	}
 
 }

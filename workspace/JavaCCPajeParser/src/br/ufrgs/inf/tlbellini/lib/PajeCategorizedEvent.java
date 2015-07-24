@@ -4,8 +4,8 @@ public class PajeCategorizedEvent extends PajeEvent {
 	
 	private PajeValue value;
 
-	public PajeCategorizedEvent() {
-		// TODO Auto-generated constructor stub
+	public PajeCategorizedEvent(PajeTraceEvent event, PajeContainer container, PajeType type) {
+		super(event, container, type);
 	}
 
 	public PajeValue getValue() {

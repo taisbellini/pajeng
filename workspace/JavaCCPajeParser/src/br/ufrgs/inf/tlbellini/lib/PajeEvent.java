@@ -3,12 +3,14 @@ package br.ufrgs.inf.tlbellini.lib;
 public class PajeEvent extends PajeObject {
 	
 	private PajeTraceEvent event;
-	//private PajeContainer container;
+	private PajeContainer container;
 	private PajeType type;
 	private double time;
 
-	public PajeEvent() {
-		// TODO Auto-generated constructor stub
+	public PajeEvent(PajeTraceEvent event, PajeContainer container, PajeType type) {
+		this.setEvent(event);
+		this.setContainer(container);
+		this.setType(type);
 	}
 
 	public PajeTraceEvent getEvent() {
@@ -33,6 +35,14 @@ public class PajeEvent extends PajeObject {
 
 	public void setTime(double time) {
 		this.time = time;
+	}
+
+	private PajeContainer getContainer() {
+		return container;
+	}
+
+	private void setContainer(PajeContainer container) {
+		this.container = container;
 	}
 
 }

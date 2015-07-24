@@ -4,8 +4,8 @@ public class PajeVariableEvent extends PajeEvent {
 	
 	private double doubleValue;
 
-	public PajeVariableEvent() {
-		// TODO Auto-generated constructor stub
+	public PajeVariableEvent(PajeTraceEvent event, PajeContainer container, PajeType type) {
+		super(event, container, type);
 	}
 
 	public double getDoubleValue() {

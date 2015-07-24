@@ -2,6 +2,7 @@ package br.ufrgs.inf.tlbellini.lib;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 public class PajeSimulator extends PajeComponent {
@@ -14,6 +15,10 @@ public class PajeSimulator extends PajeComponent {
 	private Map<String, PajeType> typeNamesMap = new HashMap<String, PajeType>();; 
 	private Map<String, PajeContainer> contMap = new HashMap<String, PajeContainer>();
 	private Map<String, PajeContainer> contNamesMap = new HashMap<String, PajeContainer>();
+	
+	private Map<String, PajeValue> values = new HashMap<String, PajeValue>();
+	private Map<String, PajeColor> colors = new HashMap<String, PajeColor>();
+
 	private double stopSimulationAtTime;
 	
 	private double selectionStart;
@@ -69,6 +74,47 @@ public class PajeSimulator extends PajeComponent {
 	  return ret;
 	}
 	
+	public Map<String, PajeValue> getValues() {
+		return values;
+	}
+
+	public void setValues(Map<String, PajeValue> values) {
+		this.values = values;
+	}
+
+	public Map<String, PajeColor> getColors() {
+		return colors;
+	}
+
+	public void setColors(Map<String, PajeColor> colors) {
+		this.colors = colors;
+	}
+	
+	public void report(){
+		
+		//print types
+		System.out.println("Types Created: ");
+		Set<Map.Entry<String, PajeType>> typeSet = typeMap.entrySet();
+		for(Map.Entry<String, PajeType> type: typeSet){
+			System.out.println(type.getValue().getAlias() + " of nature " + type.getValue().getNature());
+		}
+		
+		//print containers
+		System.out.println("Containers Created: ");
+		Set<Map.Entry<String, PajeContainer>> contSet = contMap.entrySet();
+		for(Map.Entry<String, PajeContainer> cont: contSet){
+			System.out.println(cont.getValue().alias + " of type " + cont.getValue().getType().alias);
+		}
+		
+		//print values
+		System.out.println("Values created: ");
+		Set<Map.Entry<String, PajeValue>> valSet = values.entrySet();
+		for(Map.Entry<String, PajeValue> val: valSet){
+			System.out.println(val.getValue().getId());
+		}
+		
+	}
+	
 	public void simulate(PajeObject data) throws Exception{
 		PajeTraceEvent event = (PajeTraceEvent) data;
 		setLastKnownTime(event);
@@ -86,6 +132,14 @@ public class PajeSimulator extends PajeComponent {
 			case PajeDefineEventType: pajeDefineEventType(event);
 			break;
 			case PajeDefineVariableType: pajeDefineVariableType(event);
+			break;
+			case PajeDefineLinkType: pajeDefineLinkType(event);
+			break;
+			case PajeDefineEntityValue: pajeDefineEntityValue(event);
+			break;
+			case PajeCreateContainer: pajeCreateContainer(event);
+			break;
+			case PajeDestroyContainer: pajeDestroyContainer(event);
 			break;
 			default: break;
 		}
@@ -219,5 +273,183 @@ public class PajeSimulator extends PajeComponent {
 		//add children to the parent container type
 		containerType.addChildrenType(name, alias, newType);	 
 	}
+	
+	private void pajeDefineLinkType(PajeTraceEvent event) throws Exception {
+		String name = event.valueForField(PajeFieldName.Name);
+		String type = event.valueForField(PajeFieldName.Type);
+		String alias = event.valueForField(PajeFieldName.Alias);
+		String startType = event.valueForField(PajeFieldName.StartContainerType);
+		String endType = event.valueForField(PajeFieldName.EndContainerType);
+		
+		if(typeNamesMap.containsKey(name)){
+			throw new Exception("Name already exists");
+		}
+		
+		PajeContainerType containerType;
+		if(typeMap.containsKey(type)){
+			containerType = (PajeContainerType) typeMap.get(type);
+		}else{
+			throw new Exception("Container type "+ type + " does not exist");
+		}
+		
+		//check if start and end containers exist
+		if(!typeMap.containsKey(startType)){
+			throw new Exception ("Container type " + startType + " does not exist" );
+		}
+		
+		if(!typeMap.containsKey(endType)){
+			throw new Exception ("Container type " + endType + " does not exist" );
+		}
+		
+		PajeContainerType start = (PajeContainerType) typeMap.get(startType);
+		PajeContainerType end = (PajeContainerType) typeMap.get(endType);
+		
+		//check if they are container types
+		if(!start.getNature().equals(PajeTypeNature.ContainerType))
+			throw new Exception("Type "+ startType + " defined as start container is not a container type");
+		if(!end.getNature().equals(PajeTypeNature.ContainerType))
+			throw new Exception("Type "+ endType + " defined as end container is not a container type");
+		
+		//check if Type is a common ancestral of start and end
+		if(!containerType.isAncestorOf(startType))
+			throw new Exception("Container type "+ startType + " does not have "+ type + " as ancestral");
+		if(!containerType.isAncestorOf(endType))
+			throw new Exception("Container type "+ endType + " does not have "+ type + " as ancestral");
+		
+		
+		String identifier = alias.isEmpty() ? name : alias;
+		PajeLinkType newType;
+		if(typeMap.containsKey(identifier)){
+			throw new Exception ("Link type " + identifier + " already exists");
+		}else{
+			newType = new PajeLinkType(name, alias, containerType, start, end);
+		}
+		typeMap.put(newType.getId(), newType);
+		typeNamesMap.put(newType.getName(), newType);
+		
+		//add children to the parent container type
+		containerType.addChildrenType(name, alias, newType);	 
+	}
+	
+	private void pajeDefineEntityValue(PajeTraceEvent event) throws Exception {
+		String name = event.valueForField(PajeFieldName.Name);
+		String type = event.valueForField(PajeFieldName.Type);
+		String alias = event.valueForField(PajeFieldName.Alias);
+		String color = event.valueForField(PajeFieldName.Color);
+		
+	
+		if(typeNamesMap.containsKey(name)){
+			throw new Exception("Name already exists");
+		}
+		
+		PajeType previousType;
+		if(typeMap.containsKey(type)){
+			previousType = typeMap.get(type);
+		}else{
+			throw new Exception("Type "+ type + " does not exist");
+		}
+		
+		//validates color
+		PajeColor pajeColor = getColor(color, event);
+		
+		//check if type is an acceptable type
+		if(previousType.getNature().equals(PajeTypeNature.ContainerType))
+			throw new Exception("Type "+ type + " (which is a container type) is not a valid type to define the value");
+		if(previousType.getNature().equals(PajeTypeNature.VariableType))
+			throw new Exception("Type "+ type + " (which is a variable type) is not a valid type to define the value");
+		
+		String identifier = alias.isEmpty() ? name : alias;
+		PajeValue newValue;
+		if(values.containsKey(identifier)){
+			throw new Exception ("Trying to redefine the value " + identifier + " for " + type);
+		}else{
+			newValue = new PajeValue(pajeColor, name, alias, previousType);
+		}
+		values.put(newValue.getId(), newValue);
+		colors.put(newValue.getId(), pajeColor);	 
+	}
+	
+	private void pajeCreateContainer(PajeTraceEvent event) throws Exception{
+		String name = event.valueForField(PajeFieldName.Name);
+		String type = event.valueForField(PajeFieldName.Type);
+		String alias = event.valueForField(PajeFieldName.Alias);
+		String container = event.valueForField(PajeFieldName.Container);
+		String time = event.valueForField(PajeFieldName.Time);
+		
+		//name cannot be 0
+		if(name.equals("0")){
+			throw new Exception("The container name 0 can't be used");
+		}
+		
+		//check if container type exists and is a container
+		if(!typeMap.containsKey(type)){
+			throw new Exception("The container type " + type + " is not defined");
+		}
+		
+		if(!typeMap.get(type).getNature().equals(PajeTypeNature.ContainerType)){
+			throw new Exception("Type " + type + " used to create a container is not a container");
+		}
+		
+		PajeType pajeType = typeMap.get(type);
+		
+		//get the parent container
+		PajeContainer parentContainer;
+		if(!contMap.containsKey(container))
+			throw new Exception ("Container " + container + " does not exist");
+		else
+			parentContainer = contMap.get(container);
+		
+		PajeContainerType parentType = (PajeContainerType) typeMap.get(parentContainer.getType().getAlias());
+		
+		//check if type is child of container type 
+		//CHECK IF WORKS
+		if(!parentType.getChildren().containsKey(type))
+			throw new Exception("Container type "+ type + " is not a child type for the container type of" + container);
+		
+		String identifier = alias.isEmpty() ? name : alias;
+		if(contMap.containsKey(identifier))
+			throw new Exception ("Container "+ identifier +" already exists");
+		
+		//WHAT TO DO WITH TIME???
+		PajeContainer newContainer = new PajeContainer (lastKnownTime, name, alias, parentContainer, pajeType, event);
+		contMap.put(identifier, newContainer);
+		contMap.put(name, newContainer);
+		
+		parentContainer.addChildren(identifier, newContainer);
+		
+	}
+	
+	public void pajeDestroyContainer(PajeTraceEvent event) throws Exception{
+		String name = event.valueForField(PajeFieldName.Name);
+		String type = event.valueForField(PajeFieldName.Type);
+		String time = event.valueForField(PajeFieldName.Time);
+		
+		//check if container type exists and is a container
+		if(!typeMap.containsKey(type)){
+			throw new Exception("The container type " + type + " is not defined");
+		}
+		
+		if(!typeMap.get(type).getNature().equals(PajeTypeNature.ContainerType)){
+			throw new Exception("Type " + type + " used to find container is not a container");
+		}
+		PajeType pajeType = typeMap.get(type);
+		
+		//search for container to be destroyed
+		PajeContainer container;
+		if(contMap.containsKey(name)){
+			container = contMap.get(name);
+		}else 
+			throw new Exception("Container to be destroyed "+ name + " does not exist");
+		
+		//mark as destroyed
+		PajeDestroyContainerEvent destroyEvent = new PajeDestroyContainerEvent(event, container, pajeType);
+		container.demuxer(destroyEvent);
+	}
+	
+	public void pajeSetState(PajeTraceEvent event){
+		
+	}
+	
+	
 
 }

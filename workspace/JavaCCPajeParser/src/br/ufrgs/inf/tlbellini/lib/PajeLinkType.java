@@ -27,5 +27,9 @@ public class PajeLinkType extends PajeCategorizedType {
 		this.endType = endType;
 	}
 	
+	public PajeTypeNature getNature(){
+		return PajeTypeNature.LinkType;
+	}
+	
 	
 }

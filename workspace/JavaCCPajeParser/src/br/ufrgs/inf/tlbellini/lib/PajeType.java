@@ -2,15 +2,6 @@ package br.ufrgs.inf.tlbellini.lib;
 
 public class PajeType extends PajeObject {
 	
-	public enum PajeTypeNature{
-		ContainerType,
-		VariableType,
-		StateType,
-		EventType,
-		LinkType,
-		UndefinedType
-	}
-	
 	protected String name;
 	protected String alias;
 	protected PajeType parent;
@@ -55,7 +46,6 @@ public class PajeType extends PajeObject {
 	}
 	
 	public PajeTypeNature getNature(){
-		// ?? o que eh o zero do codigo?
 		return PajeTypeNature.UndefinedType;
 	}
 	

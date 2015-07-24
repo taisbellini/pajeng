@@ -49,4 +49,12 @@ public class PajeValue extends PajeObject {
 		this.type = type;
 	}
 
+	public String getId() {
+		if(alias.isEmpty()){
+			return name;
+		}else{
+			return alias;
+		}
+	}
+
 }

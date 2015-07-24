@@ -30,5 +30,16 @@ public class PajeContainerType extends PajeType {
 	public void addChildrenType(String name, String alias, PajeType newType){
 		this.children.put(newType.getId(), newType);
 	}
+	
+	public PajeTypeNature getNature(){
+		return PajeTypeNature.ContainerType;
+	}
+	
+	public boolean isAncestorOf(String c){
+		if (this.children.containsKey(c))
+			return true;
+		else
+			return false;
+	}
 
 }

@@ -6,8 +6,8 @@ public class PajeLinkEvent extends PajeCategorizedEvent {
 	
 	private String key;
 
-	public PajeLinkEvent() {
-		// TODO Auto-generated constructor stub
+	public PajeLinkEvent(PajeTraceEvent event, PajeContainer container, PajeType type) {
+		super(event, container, type);
 	}
 
 

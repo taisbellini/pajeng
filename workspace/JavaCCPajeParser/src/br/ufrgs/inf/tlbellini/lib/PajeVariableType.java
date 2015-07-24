@@ -18,4 +18,8 @@ public class PajeVariableType extends PajeType {
 		this.color = color;
 	}
 	
+	public PajeTypeNature getNature(){
+		return PajeTypeNature.VariableType;
+	}
+	
 }
