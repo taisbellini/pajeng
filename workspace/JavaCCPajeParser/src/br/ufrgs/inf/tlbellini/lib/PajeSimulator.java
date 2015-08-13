@@ -62,13 +62,15 @@ public class PajeSimulator extends PajeComponent {
 	  String str[] = patAspas.split(color);
 	  Pattern pat = Pattern.compile(" ");
 	  String v[] = pat.split(str[1]);
+	  int line = event.getLine();
+	  
 	  if (!color.isEmpty()){
 	    if (v.length == 3){
 	      ret = new PajeColor (Float.parseFloat(v[0]), Float.parseFloat(v[1]), Float.parseFloat(v[2]), 1);
 	    }else if (v.length==4){
 	      ret = new PajeColor (Float.parseFloat(v[0]), Float.parseFloat(v[1]), Float.parseFloat(v[2]), Float.parseFloat(v[3]));
 	    }else{
-	      throw new Exception ("Could not understand color parameter");
+	      throw new Exception ("Could not understand color parameter in line " + line);
 	    }
 	  }
 	  return ret;
@@ -149,26 +151,27 @@ public class PajeSimulator extends PajeComponent {
 		String name = event.valueForField(PajeFieldName.Name);
 		String type = event.valueForField(PajeFieldName.Type);
 		String alias = event.valueForField(PajeFieldName.Alias);
+		int line = event.getLine();
 		
 		//check if name is allowed
 		if(name.equals("0")){
 			throw new Exception("Name can't be 0");
 		}
 		if(typeNamesMap.containsKey(name)){
-			throw new Exception("Name already exists");
+			throw new Exception("Name " + name + " defined in line " + line + " already exists");
 		}
 		
 		PajeContainerType containerType;
 		if(typeMap.containsKey(type)){
 			containerType = (PajeContainerType) typeMap.get(type);
 		}else{
-			throw new Exception("Container type "+ type + " does not exist");
+			throw new Exception("Container type "+ type + " defined in line "+ line +" does not exist");
 		}
 		
 		String identifier = alias.isEmpty() ? name : alias;
 		PajeContainerType newType;
 		if(typeMap.containsKey(identifier)){
-			throw new Exception ("Container type " + identifier + "already exists");
+			throw new Exception ("Container type " + identifier + " defined in line " + line + " already exists");
 		}else{
 			newType = new PajeContainerType(name, alias, containerType);
 		}
@@ -183,22 +186,23 @@ public class PajeSimulator extends PajeComponent {
 		String name = event.valueForField(PajeFieldName.Name);
 		String type = event.valueForField(PajeFieldName.Type);
 		String alias = event.valueForField(PajeFieldName.Alias);
+		int line = event.getLine();
 		
 		if(typeNamesMap.containsKey(name)){
-			throw new Exception("Name already exists");
+			throw new Exception("Name " + name + " defined in line " + line + " already exists");
 		}
 		
 		PajeContainerType containerType;
 		if(typeMap.containsKey(type)){
 			containerType = (PajeContainerType) typeMap.get(type);
 		}else{
-			throw new Exception("Container type "+ type + " does not exist");
+			throw new Exception("Container type "+ type + " defined in line " + line + " does not exist");
 		}
 		
 		String identifier = alias.isEmpty() ? name : alias;
 		PajeStateType newType;
 		if(typeMap.containsKey(identifier)){
-			throw new Exception ("State type " + identifier + " already exists");
+			throw new Exception ("State type " + identifier + " defined in line " + line + " already exists");
 		}else{
 			newType = new PajeStateType(name, alias, containerType);
 		}
@@ -213,6 +217,7 @@ public class PajeSimulator extends PajeComponent {
 		String name = event.valueForField(PajeFieldName.Name);
 		String type = event.valueForField(PajeFieldName.Type);
 		String alias = event.valueForField(PajeFieldName.Alias);
+		int line = event.getLine();
 		
 		if(typeNamesMap.containsKey(name)){
 			throw new Exception("Name already exists");
@@ -223,13 +228,13 @@ public class PajeSimulator extends PajeComponent {
 		if(typeMap.containsKey(type)){
 			containerType = (PajeContainerType) typeMap.get(type);
 		}else{
-			throw new Exception("Container type "+ type + "does not exist");
+			throw new Exception("Container type "+ type + " defined in line " + line + "does not exist");
 		}
 		
 		String identifier = alias.isEmpty() ? name : alias;
 		PajeEventType newType;
 		if(typeMap.containsKey(identifier)){
-			throw new Exception ("Event type " + identifier + "already exists");
+			throw new Exception ("Event type " + identifier +  " defined in line " + line + "already exists");
 		}else{
 			newType = new PajeEventType(name, alias, containerType);
 		}
@@ -245,6 +250,7 @@ public class PajeSimulator extends PajeComponent {
 		String type = event.valueForField(PajeFieldName.Type);
 		String alias = event.valueForField(PajeFieldName.Alias);
 		String color = event.valueForField(PajeFieldName.Color);
+		int line = event.getLine();
 		
 		if(typeNamesMap.containsKey(name)){
 			throw new Exception("Name already exists");
@@ -254,7 +260,7 @@ public class PajeSimulator extends PajeComponent {
 		if(typeMap.containsKey(type)){
 			containerType = (PajeContainerType) typeMap.get(type);
 		}else{
-			throw new Exception("Container type "+ type + "does not exist");
+			throw new Exception("Container type "+ type + " defined in line " + line + "does not exist");
 		}
 		
 		PajeColor pajeColor = getColor(color, event);
@@ -262,7 +268,7 @@ public class PajeSimulator extends PajeComponent {
 		String identifier = alias.isEmpty() ? name : alias;
 		PajeVariableType newType;
 		if(typeMap.containsKey(identifier)){
-			throw new Exception ("Variable type " + identifier + "already exists");
+			throw new Exception ("Variable type " + identifier + " defined in line " + line + "already exists");
 		}else{
 			newType = new PajeVariableType(name, alias, containerType, pajeColor);
 		}
@@ -280,25 +286,26 @@ public class PajeSimulator extends PajeComponent {
 		String alias = event.valueForField(PajeFieldName.Alias);
 		String startType = event.valueForField(PajeFieldName.StartContainerType);
 		String endType = event.valueForField(PajeFieldName.EndContainerType);
+		int line = event.getLine();
 		
 		if(typeNamesMap.containsKey(name)){
-			throw new Exception("Name already exists");
+			throw new Exception("Name " + name + " defined in line " + line + " already exists");
 		}
 		
 		PajeContainerType containerType;
 		if(typeMap.containsKey(type)){
 			containerType = (PajeContainerType) typeMap.get(type);
 		}else{
-			throw new Exception("Container type "+ type + " does not exist");
+			throw new Exception("Container type "+ type + " defined in line " + line + " does not exist");
 		}
 		
 		//check if start and end containers exist
 		if(!typeMap.containsKey(startType)){
-			throw new Exception ("Container type " + startType + " does not exist" );
+			throw new Exception ("Container type " + startType + " defined in line " + line + " does not exist" );
 		}
 		
 		if(!typeMap.containsKey(endType)){
-			throw new Exception ("Container type " + endType + " does not exist" );
+			throw new Exception ("Container type " + endType + " defined in line " + line + " does not exist" );
 		}
 		
 		PajeContainerType start = (PajeContainerType) typeMap.get(startType);
@@ -306,21 +313,21 @@ public class PajeSimulator extends PajeComponent {
 		
 		//check if they are container types
 		if(!start.getNature().equals(PajeTypeNature.ContainerType))
-			throw new Exception("Type "+ startType + " defined as start container is not a container type");
+			throw new Exception("Type "+ startType + " defined as start container in line " + line + " is not a container type");
 		if(!end.getNature().equals(PajeTypeNature.ContainerType))
-			throw new Exception("Type "+ endType + " defined as end container is not a container type");
+			throw new Exception("Type "+ endType + " defined as end container in line " + line + " is not a container type");
 		
 		//check if Type is a common ancestral of start and end
 		if(!containerType.isAncestorOf(startType))
-			throw new Exception("Container type "+ startType + " does not have "+ type + " as ancestral");
+			throw new Exception("Container type "+ startType + " in line " + line + " does not have "+ type + " as ancestral");
 		if(!containerType.isAncestorOf(endType))
-			throw new Exception("Container type "+ endType + " does not have "+ type + " as ancestral");
+			throw new Exception("Container type "+ endType + " in line " + line + " does not have "+ type + " as ancestral");
 		
 		
 		String identifier = alias.isEmpty() ? name : alias;
 		PajeLinkType newType;
 		if(typeMap.containsKey(identifier)){
-			throw new Exception ("Link type " + identifier + " already exists");
+			throw new Exception ("Link type " + identifier + " defined in line " + line + " already exists");
 		}else{
 			newType = new PajeLinkType(name, alias, containerType, start, end);
 		}
@@ -336,17 +343,18 @@ public class PajeSimulator extends PajeComponent {
 		String type = event.valueForField(PajeFieldName.Type);
 		String alias = event.valueForField(PajeFieldName.Alias);
 		String color = event.valueForField(PajeFieldName.Color);
+		int line = event.getLine();
 		
 	
 		if(typeNamesMap.containsKey(name)){
-			throw new Exception("Name already exists");
+			throw new Exception("Name " + name + " defined in line " + line + " already exists");
 		}
 		
 		PajeType previousType;
 		if(typeMap.containsKey(type)){
 			previousType = typeMap.get(type);
 		}else{
-			throw new Exception("Type "+ type + " does not exist");
+			throw new Exception("Type "+ type + " defined in line " + line + " does not exist");
 		}
 		
 		//validates color
@@ -354,14 +362,14 @@ public class PajeSimulator extends PajeComponent {
 		
 		//check if type is an acceptable type
 		if(previousType.getNature().equals(PajeTypeNature.ContainerType))
-			throw new Exception("Type "+ type + " (which is a container type) is not a valid type to define the value");
+			throw new Exception("Type "+ type + " defined in line " + line + " (which is a container type) is not a valid type to define the value");
 		if(previousType.getNature().equals(PajeTypeNature.VariableType))
-			throw new Exception("Type "+ type + " (which is a variable type) is not a valid type to define the value");
+			throw new Exception("Type "+ type + " defined in line " + line + " (which is a variable type) is not a valid type to define the value");
 		
 		String identifier = alias.isEmpty() ? name : alias;
 		PajeValue newValue;
 		if(values.containsKey(identifier)){
-			throw new Exception ("Trying to redefine the value " + identifier + " for " + type);
+			throw new Exception ("Trying to redefine the value " + identifier + " for " + type + " in line " + line);
 		}else{
 			newValue = new PajeValue(pajeColor, name, alias, previousType);
 		}
@@ -375,19 +383,20 @@ public class PajeSimulator extends PajeComponent {
 		String alias = event.valueForField(PajeFieldName.Alias);
 		String container = event.valueForField(PajeFieldName.Container);
 		String time = event.valueForField(PajeFieldName.Time);
+		int line = event.getLine();
 		
 		//name cannot be 0
 		if(name.equals("0")){
-			throw new Exception("The container name 0 can't be used");
+			throw new Exception("The container name 0 can't be used (line " + line + ")");
 		}
 		
 		//check if container type exists and is a container
 		if(!typeMap.containsKey(type)){
-			throw new Exception("The container type " + type + " is not defined");
+			throw new Exception("The container type " + type + " defined in line " + line + " is not defined");
 		}
 		
 		if(!typeMap.get(type).getNature().equals(PajeTypeNature.ContainerType)){
-			throw new Exception("Type " + type + " used to create a container is not a container");
+			throw new Exception("Type " + type + " defined in line " + line + " used to create a container is not a container");
 		}
 		
 		PajeType pajeType = typeMap.get(type);
@@ -395,7 +404,7 @@ public class PajeSimulator extends PajeComponent {
 		//get the parent container
 		PajeContainer parentContainer;
 		if(!contMap.containsKey(container))
-			throw new Exception ("Container " + container + " does not exist");
+			throw new Exception ("Container " + container + " defined in line " + line + " does not exist");
 		else
 			parentContainer = contMap.get(container);
 		
@@ -404,11 +413,11 @@ public class PajeSimulator extends PajeComponent {
 		//check if type is child of container type 
 		//CHECK IF WORKS
 		if(!parentType.getChildren().containsKey(type))
-			throw new Exception("Container type "+ type + " is not a child type for the container type of" + container);
+			throw new Exception("Container type "+ type + " defined in line " + line + " is not a child type for the container type of" + container);
 		
 		String identifier = alias.isEmpty() ? name : alias;
 		if(contMap.containsKey(identifier))
-			throw new Exception ("Container "+ identifier +" already exists");
+			throw new Exception ("Container "+ identifier + " defined in line " + line +" already exists");
 		
 		//WHAT TO DO WITH TIME???
 		PajeContainer newContainer = new PajeContainer (lastKnownTime, name, alias, parentContainer, pajeType, event);
@@ -423,14 +432,15 @@ public class PajeSimulator extends PajeComponent {
 		String name = event.valueForField(PajeFieldName.Name);
 		String type = event.valueForField(PajeFieldName.Type);
 		String time = event.valueForField(PajeFieldName.Time);
+		int line = event.getLine();
 		
 		//check if container type exists and is a container
 		if(!typeMap.containsKey(type)){
-			throw new Exception("The container type " + type + " is not defined");
+			throw new Exception("The container type " + type + " defined in line " + line + " is not defined");
 		}
 		
 		if(!typeMap.get(type).getNature().equals(PajeTypeNature.ContainerType)){
-			throw new Exception("Type " + type + " used to find container is not a container");
+			throw new Exception("Type " + type + " used to find container in line " + line + " is not a container");
 		}
 		PajeType pajeType = typeMap.get(type);
 		
@@ -439,7 +449,7 @@ public class PajeSimulator extends PajeComponent {
 		if(contMap.containsKey(name)){
 			container = contMap.get(name);
 		}else 
-			throw new Exception("Container to be destroyed "+ name + " does not exist");
+			throw new Exception("Container to be destroyed "+ name + " defined in line " + line + " does not exist");
 		
 		//mark as destroyed
 		PajeDestroyContainerEvent destroyEvent = new PajeDestroyContainerEvent(event, container, pajeType);

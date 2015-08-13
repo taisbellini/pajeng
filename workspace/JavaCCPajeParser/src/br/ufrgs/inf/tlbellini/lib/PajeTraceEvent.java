@@ -13,14 +13,6 @@ public class PajeTraceEvent extends PajeObject {
 		this.setLine(-1);
 	};
 	
-	public PajeTraceEvent(int line){
-		this.setLine(line);
-	}
-	
-	public PajeTraceEvent(PajeEventDefinition eventDef){
-		this.pajeEventDef = eventDef;
-	}
-	
 	public int getLine() {
 		return line;
 	}

@@ -209,7 +209,8 @@ void non_empty_event() throws Exception:
 }
 {  id = < INT >  {
   	ArrayList<String> fields;
-  	event.setPajeEventDef(Integer.parseInt(id.image), eventDefinitions); 
+  	event.setPajeEventDef(Integer.parseInt(id.image), eventDefinitions);
+  	event.setLine(id.beginLine); 
   } 
   fields = arguments() <  BREAK >  {
   	event.setFields(fields);
@@ -230,8 +231,9 @@ ArrayList<String> arguments():{
   {return fields;}}
 
 String argument():
-{Token arg;}
-{	arg = < STRING > {return arg.image.toString(); } 
-	|arg = < FLOAT > {return arg.image.toString(); } 
-	|arg = < INT > {return arg.image.toString(); }
+{	Token arg;
+}
+{	arg = < STRING > {return arg.image.toString();}
+	|arg = < FLOAT > {return arg.image.toString();}
+	|arg = < INT > {return arg.image.toString();}
 }  

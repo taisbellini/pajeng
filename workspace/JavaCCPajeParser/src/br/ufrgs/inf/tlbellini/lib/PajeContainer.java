@@ -80,7 +80,7 @@ public class PajeContainer extends PajeNamedEntity {
 		double lastKnownTime = event.getTime();
 		
 		if(this.stopSimulationAt != -1){
-			if(lastKnownTime > stopSimulationAt){
+			if(lastKnownTime > this.stopSimulationAt){
 				pajeDestroyContainer(stopSimulationAt, event);
 				return;
 			}
@@ -115,14 +115,7 @@ public class PajeContainer extends PajeNamedEntity {
 		this.setEndTime(time);
 		
 		//finish all entities
-		Iterator<ArrayList<PajeEntity>> itArray = entities.values().iterator();
-		while(itArray.hasNext()){
-			//same as original code: ??????
-			if(!itArray.next().isEmpty()){
-				PajeEntity last = itArray.next().get(itArray.next().size() -1);
-				((PajeDoubleTimedEntity) last).setEndTime(time);
-			}
-		}
+		//TODO
 		
 		//check pending links
 		//TODO
