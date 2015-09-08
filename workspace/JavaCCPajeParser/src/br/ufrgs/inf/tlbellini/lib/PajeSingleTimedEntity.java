@@ -4,10 +4,6 @@ public class PajeSingleTimedEntity extends PajeEntity {
 	
 	private double startTime;
 
-	public PajeSingleTimedEntity() {
-		// TODO Auto-generated constructor stub
-	}
-
 	public PajeSingleTimedEntity(PajeContainer container, PajeType type, double time, PajeTraceEvent event) {
 		super(container, type, event);
 		this.setStartTime(time);

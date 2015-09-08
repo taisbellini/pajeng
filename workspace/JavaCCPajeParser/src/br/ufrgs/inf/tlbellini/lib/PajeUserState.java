@@ -4,8 +4,9 @@ public class PajeUserState extends PajeValueEntity {
 	
 	private double imbrication;
 
-	public PajeUserState() {
-		// TODO Auto-generated constructor stub
+	public PajeUserState(PajeContainer container, PajeType type, double startTime, PajeValue value, PajeTraceEvent event) {
+		super(container, type, startTime, value, event);
+		System.out.println("new state ok");
 	}
 
 	public double getImbrication() {
@@ -14,6 +15,7 @@ public class PajeUserState extends PajeValueEntity {
 
 	public void setImbrication(double imbrication) {
 		this.imbrication = imbrication;
+		System.out.println("set imb ok");
 	}
 
 }

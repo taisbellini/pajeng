@@ -16,23 +16,20 @@ public class PajeSimulator extends PajeComponent {
 	private Map<String, PajeContainer> contMap = new HashMap<String, PajeContainer>();
 	private Map<String, PajeContainer> contNamesMap = new HashMap<String, PajeContainer>();
 	
-	private Map<String, PajeValue> values = new HashMap<String, PajeValue>();
-	private Map<String, PajeColor> colors = new HashMap<String, PajeColor>();
-
-	private double stopSimulationAtTime;
+	//private double stopSimulationAtTime;
 	
 	private double selectionStart;
 	private double selectionEnd;
 	
 	protected double lastKnownTime;
 	
-	public PajeSimulator(){
+	/*public PajeSimulator(){
 		this.stopSimulationAtTime = -1;
 	}
 	
 	public PajeSimulator(double stopAt){
 		this.stopSimulationAtTime = stopAt;
-	}
+	}*/
 	
 	public void init(){
 		// name, alias, parent
@@ -75,23 +72,7 @@ public class PajeSimulator extends PajeComponent {
 	  }
 	  return ret;
 	}
-	
-	public Map<String, PajeValue> getValues() {
-		return values;
-	}
-
-	public void setValues(Map<String, PajeValue> values) {
-		this.values = values;
-	}
-
-	public Map<String, PajeColor> getColors() {
-		return colors;
-	}
-
-	public void setColors(Map<String, PajeColor> colors) {
-		this.colors = colors;
-	}
-	
+		
 	public void report(){
 		
 		//print types
@@ -109,11 +90,11 @@ public class PajeSimulator extends PajeComponent {
 		}
 		
 		//print values
-		System.out.println("Values created: ");
-		Set<Map.Entry<String, PajeValue>> valSet = values.entrySet();
-		for(Map.Entry<String, PajeValue> val: valSet){
-			System.out.println(val.getValue().getId());
-		}
+		//System.out.println("Values created: ");
+		//Set<Map.Entry<String, PajeValue>> valSet = values.entrySet();
+		//for(Map.Entry<String, PajeValue> val: valSet){
+		//	System.out.println(val.getValue().getId());
+		//}
 		
 	}
 	
@@ -142,6 +123,8 @@ public class PajeSimulator extends PajeComponent {
 			case PajeCreateContainer: pajeCreateContainer(event);
 			break;
 			case PajeDestroyContainer: pajeDestroyContainer(event);
+			break;
+			case PajeSetState: pajeSetState(event);
 			break;
 			default: break;
 		}
@@ -249,6 +232,7 @@ public class PajeSimulator extends PajeComponent {
 		String name = event.valueForField(PajeFieldName.Name);
 		String type = event.valueForField(PajeFieldName.Type);
 		String alias = event.valueForField(PajeFieldName.Alias);
+		//optional
 		String color = event.valueForField(PajeFieldName.Color);
 		int line = event.getLine();
 		
@@ -263,7 +247,12 @@ public class PajeSimulator extends PajeComponent {
 			throw new Exception("Container type "+ type + " defined in line " + line + "does not exist");
 		}
 		
-		PajeColor pajeColor = getColor(color, event);
+		PajeColor pajeColor;
+		if(!color.isEmpty()){
+			pajeColor = getColor(color, event);
+		}
+		
+		pajeColor = null;
 		
 		String identifier = alias.isEmpty() ? name : alias;
 		PajeVariableType newType;
@@ -318,12 +307,11 @@ public class PajeSimulator extends PajeComponent {
 			throw new Exception("Type "+ endType + " defined as end container in line " + line + " is not a container type");
 		
 		//check if Type is a common ancestral of start and end
-		if(!containerType.isAncestorOf(startType))
+		/*if(!containerType.isAncestralOf(startType))
 			throw new Exception("Container type "+ startType + " in line " + line + " does not have "+ type + " as ancestral");
-		if(!containerType.isAncestorOf(endType))
+		if(!containerType.isAncestralOf(endType))
 			throw new Exception("Container type "+ endType + " in line " + line + " does not have "+ type + " as ancestral");
-		
-		
+		*/
 		String identifier = alias.isEmpty() ? name : alias;
 		PajeLinkType newType;
 		if(typeMap.containsKey(identifier)){
@@ -342,39 +330,42 @@ public class PajeSimulator extends PajeComponent {
 		String name = event.valueForField(PajeFieldName.Name);
 		String type = event.valueForField(PajeFieldName.Type);
 		String alias = event.valueForField(PajeFieldName.Alias);
+		//optional
 		String color = event.valueForField(PajeFieldName.Color);
 		int line = event.getLine();
 		
-	
 		if(typeNamesMap.containsKey(name)){
 			throw new Exception("Name " + name + " defined in line " + line + " already exists");
 		}
 		
-		PajeType previousType;
+		PajeCategorizedType targetType;
 		if(typeMap.containsKey(type)){
-			previousType = typeMap.get(type);
+			targetType = (PajeCategorizedType) typeMap.get(type);
 		}else{
 			throw new Exception("Type "+ type + " defined in line " + line + " does not exist");
 		}
 		
-		//validates color
-		PajeColor pajeColor = getColor(color, event);
+		//validates color if exists
+		PajeColor pajeColor;
+		if(!color.isEmpty()){
+			pajeColor = getColor(color, event);
+		}
+		
+		pajeColor = null;
 		
 		//check if type is an acceptable type
-		if(previousType.getNature().equals(PajeTypeNature.ContainerType))
+		if(targetType.getNature().equals(PajeTypeNature.ContainerType))
 			throw new Exception("Type "+ type + " defined in line " + line + " (which is a container type) is not a valid type to define the value");
-		if(previousType.getNature().equals(PajeTypeNature.VariableType))
+		if(targetType.getNature().equals(PajeTypeNature.VariableType))
 			throw new Exception("Type "+ type + " defined in line " + line + " (which is a variable type) is not a valid type to define the value");
 		
 		String identifier = alias.isEmpty() ? name : alias;
-		PajeValue newValue;
-		if(values.containsKey(identifier)){
+		if(targetType.getValues().containsKey(identifier)){
 			throw new Exception ("Trying to redefine the value " + identifier + " for " + type + " in line " + line);
 		}else{
-			newValue = new PajeValue(pajeColor, name, alias, previousType);
+			targetType.addValue(name, alias, pajeColor);
 		}
-		values.put(newValue.getId(), newValue);
-		colors.put(newValue.getId(), pajeColor);	 
+			 
 	}
 	
 	private void pajeCreateContainer(PajeTraceEvent event) throws Exception{
@@ -382,7 +373,6 @@ public class PajeSimulator extends PajeComponent {
 		String type = event.valueForField(PajeFieldName.Type);
 		String alias = event.valueForField(PajeFieldName.Alias);
 		String container = event.valueForField(PajeFieldName.Container);
-		String time = event.valueForField(PajeFieldName.Time);
 		int line = event.getLine();
 		
 		//name cannot be 0
@@ -419,7 +409,7 @@ public class PajeSimulator extends PajeComponent {
 		if(contMap.containsKey(identifier))
 			throw new Exception ("Container "+ identifier + " defined in line " + line +" already exists");
 		
-		//WHAT TO DO WITH TIME???
+		//time is in lastKnownTime (defined in simulate method)
 		PajeContainer newContainer = new PajeContainer (lastKnownTime, name, alias, parentContainer, pajeType, event);
 		contMap.put(identifier, newContainer);
 		contMap.put(name, newContainer);
@@ -431,14 +421,12 @@ public class PajeSimulator extends PajeComponent {
 	public void pajeDestroyContainer(PajeTraceEvent event) throws Exception{
 		String name = event.valueForField(PajeFieldName.Name);
 		String type = event.valueForField(PajeFieldName.Type);
-		String time = event.valueForField(PajeFieldName.Time);
 		int line = event.getLine();
 		
 		//check if container type exists and is a container
 		if(!typeMap.containsKey(type)){
 			throw new Exception("The container type " + type + " defined in line " + line + " is not defined");
 		}
-		
 		if(!typeMap.get(type).getNature().equals(PajeTypeNature.ContainerType)){
 			throw new Exception("Type " + type + " used to find container in line " + line + " is not a container");
 		}
@@ -451,14 +439,60 @@ public class PajeSimulator extends PajeComponent {
 		}else 
 			throw new Exception("Container to be destroyed "+ name + " defined in line " + line + " does not exist");
 		
-		//mark as destroyed
+		//check if container type is correct
+		if(!container.getType().equals(pajeType)){
+			throw new Exception("Wrong container type " + pajeType.getAlias() + " for container "+ container.getName() + " in line "+ line);
+		}
+		
+		//create event to sent to demuxer (necessary?? could we use the trace event?)
 		PajeDestroyContainerEvent destroyEvent = new PajeDestroyContainerEvent(event, container, pajeType);
+		destroyEvent.setTime(lastKnownTime);
 		container.demuxer(destroyEvent);
 	}
 	
-	public void pajeSetState(PajeTraceEvent event){
+	public void pajeSetState(PajeTraceEvent event) throws Exception{
+		String containerName = event.valueForField(PajeFieldName.Container);
+		String type = event.valueForField(PajeFieldName.Type);
+		String value = event.valueForField(PajeFieldName.Value);
+		//double time = Double.parseDouble(event.valueForField(PajeFieldName.Time));
+		int line = event.getLine();
 		
+		//check if container type exists and is a state type
+		if(!typeMap.containsKey(type)){
+			throw new Exception("The type " + type + " refered in line " + line + " is not defined");
+		}
+		if(!typeMap.get(type).getNature().equals(PajeTypeNature.StateType)){
+			throw new Exception("Type " + type + " used in line " + line + " is not a state type");
+		}
+		PajeStateType pajeType = (PajeStateType) typeMap.get(type);
+		
+		//check if container exists
+		PajeContainer container;
+		if(contMap.containsKey(containerName)){
+			container = contMap.get(containerName);
+		}else 
+			throw new Exception("Container "+ containerName + " defined in line " + line + " does not exist");
+
+		//check if type is a child of container type
+		PajeContainerType containerType = (PajeContainerType) container.getType();
+		if(!containerType.isAncestralOf(type)){
+			throw new Exception ("Type " + type + " is not a child type of the container type of " + containerName);
+		}
+		
+		//check if the value was previously declared
+		  PajeValue pajeValue = null;
+		  if (pajeType.hasValueForIdentifier(value)){
+		    pajeValue = pajeType.valueForIdentifier(value);
+		  }else{
+		    pajeType.addValue(value, value, null);
+		    pajeValue = pajeType.getValues().get(value);
+		  }
+		
+		PajeSetStateEvent setStateEvent = new PajeSetStateEvent(event, container, pajeType, lastKnownTime, pajeValue);
+		container.demuxer(setStateEvent);
 	}
+	
+
 	
 	
 

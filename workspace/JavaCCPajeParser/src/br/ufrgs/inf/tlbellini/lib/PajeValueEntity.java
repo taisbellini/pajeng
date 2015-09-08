@@ -4,8 +4,8 @@ public class PajeValueEntity extends PajeDoubleTimedEntity {
 	
 	PajeValue value;
 
-	public PajeValueEntity() {
-		// TODO Auto-generated constructor stub
+	public PajeValueEntity(PajeContainer container,PajeType type, double startTime,PajeValue value,PajeTraceEvent event) {
+		super(container, type, startTime, event);
 	}
 
 }

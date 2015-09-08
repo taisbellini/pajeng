@@ -4,8 +4,8 @@ public class PajeUserEvent extends PajeSingleTimedEntity {
 	
 	private PajeValue value;
 
-	public PajeUserEvent() {
-		// TODO Auto-generated constructor stub
+	public PajeUserEvent(PajeContainer container, PajeType type, double time, PajeValue value, PajeTraceEvent event) {
+		super(container, type, time, event);
 	}
 
 	public PajeValue getValue() {

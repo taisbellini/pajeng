@@ -4,8 +4,8 @@ public class PajeUserVariable extends PajeDoubleTimedEntity {
 	
 	private double value;
 
-	public PajeUserVariable() {
-		// TODO Auto-generated constructor stub
+	public PajeUserVariable(PajeContainer container, PajeType type, double time, double value, PajeTraceEvent event) {
+		super(container, type, time, event);
 	}
 
 	public double getValue() {

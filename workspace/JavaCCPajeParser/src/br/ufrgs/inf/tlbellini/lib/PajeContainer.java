@@ -16,10 +16,10 @@ public class PajeContainer extends PajeNamedEntity {
 	
 	private Map<PajeType, String> linksUsedKeys = new HashMap<PajeType, String>(); //used keys for this container
 	private Map<PajeType, Map<String, PajeUserLink>> pendingLinks;
-	private Map<PajeType, ArrayList<PajeUserState>> stackStates; //stack for state types
+	private Map<PajeType, ArrayList<PajeUserState>> stackStates = new HashMap<PajeType, ArrayList<PajeUserState>>(); //stack for state types
 	
 	// keep all simulated entities
-	private Map<PajeType, ArrayList<PajeEntity>> entities;
+	private Map<PajeType, ArrayList<PajeEntity>> entities = new HashMap<PajeType, ArrayList<PajeEntity>>();
 	
 	
 	public PajeContainer(double time, String name, String alias, PajeContainer parent, PajeType type, PajeTraceEvent event){
@@ -27,6 +27,10 @@ public class PajeContainer extends PajeNamedEntity {
 		this.alias = alias;
 		this.setDestroyed(false);
 		this.setStopSimulationAt(-1);
+		if(parent != null){
+			this.depth = parent.depth +1;
+		}else
+			this.depth = 0;
 	}
 	
 	public PajeContainer(double time, String name, String alias, PajeContainer parent, PajeType type, PajeTraceEvent event, double stopAt){
@@ -63,65 +67,160 @@ public class PajeContainer extends PajeNamedEntity {
 	public void setStopSimulationAt(double stopSimulationAt) {
 		this.stopSimulationAt = stopSimulationAt;
 	}
-	
-	public boolean isAncestorof(PajeContainer c){
-		if(this.children.containsKey(c))
-			return true;
-		else
-			return false;
-	}
-	
+		
+	/* NECESSARY??? To make the methods private */
 	public void demuxer(PajeEvent event) throws Exception{
 		
+		//if Container destroyed, can't do anything (maybe an exception??)
 		if(this.destroyed){
 			return;
 		}
-		
-		double lastKnownTime = event.getTime();
-		
+		/*double lastKnownTime = event.getTime();
+		 *
+		 * deciding if necessary
 		if(this.stopSimulationAt != -1){
 			if(lastKnownTime > this.stopSimulationAt){
 				pajeDestroyContainer(stopSimulationAt, event);
 				return;
 			}
-		}
+		}*/
 		
 		//call the method to be simulated
 		PajeEventId eventId = event.getEvent().getPajeEventDef().getPajeEventId();
 		callEventMethod(eventId, event);
+		
+		this.setEndTime(event.getTime());
 	}
 	
 
 	private void callEventMethod(PajeEventId eventId, PajeEvent event) throws Exception {
 		switch(eventId){
-		case PajeDestroyContainer: pajeDestroyContainer(event.getTime(), event);
+		case PajeDestroyContainer: pajeDestroyContainer(event);
+		break;
+		case PajeSetState: pajeSetState((PajeStateEvent) event);
+		break;
+		case PajePushState: pajePushState((PajeStateEvent) event);
 		break;
 		default: break;
 		}
 		
 	}
 
-	private void pajeDestroyContainer(double time, PajeEvent event) throws Exception {
+	private void pajeDestroyContainer(PajeEvent event) throws Exception {
+		
 		if(this.destroyed){
-			throw new Exception ("Container "+ this.alias + " already destroyed");
+			throw new Exception ("Container "+ this.alias + " already destroyed ");
 		}
 		
-		destroy(time);
+		destroy(event.getTime());
 		
 	}
 	
 	private void destroy (double time){
+		
 		this.setDestroyed(true);
 		this.setEndTime(time);
 		
 		//finish all entities
-		//TODO
+		for(Map.Entry<PajeType, ArrayList<PajeEntity>> entry : this.entities.entrySet()){
+			for(PajeEntity ent : entry.getValue()){
+				//TODO salvar no bd e remover
+				((PajeDoubleTimedEntity) ent).setEndTime(time);
+			}
+		}
 		
 		//check pending links
 		//TODO
 		
 		//end stack 
-		//TODO
+		System.out.println("setou time pra " + time + " in entities e o stack?");
+		for(Map.Entry<PajeType, ArrayList<PajeUserState>> entry : this.stackStates.entrySet()){
+			for(PajeEntity ent : entry.getValue()){
+				System.out.println("End time no stack" + ((PajeDoubleTimedEntity) ent).getEndTime());
+				//TODO salvar no bd e remover
+				((PajeDoubleTimedEntity) ent).setEndTime(time);
+			}
+		}
+	}
+	
+	private void pajeSetState(PajeStateEvent event) throws Exception{
+		
+		PajeType type = event.getType();
+		PajeValue value = event.getValue();
+		double time = event.getTime();
+		PajeTraceEvent traceEvent = event.getEvent();
+		checkTimeOrder(event);
+		resetState(event);
+		
+		PajeUserState newState = new PajeUserState(this, type, time, value, traceEvent);
+		newState.setImbrication(0);
+		//create entry if empty
+		if(this.entities.isEmpty() || !this.entities.containsKey(type))
+			this.entities.put(type, new ArrayList<PajeEntity>());
+		if(this.stackStates.isEmpty() || !this.stackStates.containsKey(type))
+			this.stackStates.put(type, new ArrayList<PajeUserState>());
+		
+		this.entities.get(type).add(newState);
+		this.stackStates.get(type).add(newState);
+		
+	}
+	
+private void pajePushState(PajeStateEvent event) throws Exception{
+		
+		PajeType type = event.getType();
+		PajeValue value = event.getValue();
+		double time = event.getTime();
+		PajeTraceEvent traceEvent = event.getEvent();
+		
+		checkTimeOrder(event);
+		resetState(event);
+		
+		PajeUserState newState = new PajeUserState(this, type, time, value, traceEvent);
+		newState.setImbrication(0);
+		
+		//create entry if empty
+		if(this.entities.isEmpty())
+			this.entities.put(type, new ArrayList<PajeEntity>());
+		if(this.stackStates.isEmpty())
+			this.stackStates.put(type, new ArrayList<PajeUserState>());
+		
+		this.entities.get(type).add(newState);
+		this.stackStates.get(type).add(newState);
+		
+	}
+	
+	
+	
+	//check if trace is correctly ordered
+	public boolean checkTimeOrder(PajeEvent event) throws Exception{
+		double time = event.getTime();
+		PajeTraceEvent traceEvent = event.getEvent();
+		
+		 if(!this.entities.isEmpty()){
+			 if(this.entities.containsKey(event.getType())){
+				 ArrayList<PajeEntity> v = this.entities.get(event.getType());
+				if(!v.isEmpty()){
+					PajeDoubleTimedEntity last = (PajeDoubleTimedEntity) v.get(v.size()-1);
+					if((last.getStartTime() > time) || last.getEndTime() != -1 && last.getEndTime() > time){
+						throw new Exception ("Trace is not time-ordered	in "+ traceEvent.getLine());
+					}
+				}
+			 }
+		}
+		return true;
+	}
+	
+	public void resetState (PajeEvent event) throws Exception{
+		//checkTimeOrder (event);
+		
+		if(!this.stackStates.isEmpty()){
+			if(stackStates.containsKey(event.getType())){
+				for (PajeUserState state : this.stackStates.get(event.getType())){
+					state.setEndTime(event.getTime());
+					//can I clear the stack?
+				}
+			}
+		}
 	}
 
 }

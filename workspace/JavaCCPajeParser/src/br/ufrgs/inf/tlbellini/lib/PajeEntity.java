@@ -8,17 +8,11 @@ public class PajeEntity extends PajeObject {
 	private PajeContainer container;
 	private PajeType type;
 	Map<String, String> extraFields;
-	
-	
-	public PajeEntity() {
-		// TODO Auto-generated constructor stub
-	}
-
 
 	public PajeEntity(PajeContainer container, PajeType type2, PajeTraceEvent event) {
 		this.setContainer(container);
 		this.setType(type2);
-		//add event
+		//TODO add event extra fields
 	}
 
 
@@ -40,5 +34,6 @@ public class PajeEntity extends PajeObject {
 	public void setContainer(PajeContainer container) {
 		this.container = container;
 	}
+
 
 }

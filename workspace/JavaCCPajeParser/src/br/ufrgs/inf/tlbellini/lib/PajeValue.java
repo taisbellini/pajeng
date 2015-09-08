@@ -7,7 +7,7 @@ public class PajeValue extends PajeObject {
 	private String alias;
 	private PajeType type;
 	
-	public PajeValue(PajeColor color, String name, String alias, PajeType type){
+	public PajeValue(String name, String alias, PajeType type, PajeColor color){
 		this.setColor(color);
 		this.setName(name);
 		this.setAlias(alias);
