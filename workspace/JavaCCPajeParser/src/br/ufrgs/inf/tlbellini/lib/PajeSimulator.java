@@ -307,11 +307,11 @@ public class PajeSimulator extends PajeComponent {
 			throw new Exception("Type "+ endType + " defined as end container in line " + line + " is not a container type");
 		
 		//check if Type is a common ancestral of start and end
-		/*if(!containerType.isAncestralOf(startType))
+		if(!start.hasAncestral(containerType))
 			throw new Exception("Container type "+ startType + " in line " + line + " does not have "+ type + " as ancestral");
-		if(!containerType.isAncestralOf(endType))
+		if(!end.hasAncestral(containerType))
 			throw new Exception("Container type "+ endType + " in line " + line + " does not have "+ type + " as ancestral");
-		*/
+		
 		String identifier = alias.isEmpty() ? name : alias;
 		PajeLinkType newType;
 		if(typeMap.containsKey(identifier)){
@@ -475,7 +475,7 @@ public class PajeSimulator extends PajeComponent {
 
 		//check if type is a child of container type
 		PajeContainerType containerType = (PajeContainerType) container.getType();
-		if(!containerType.isAncestralOf(type)){
+		if(!pajeType.hasAncestral(containerType)){
 			throw new Exception ("Type " + type + " is not a child type of the container type of " + containerName);
 		}
 		

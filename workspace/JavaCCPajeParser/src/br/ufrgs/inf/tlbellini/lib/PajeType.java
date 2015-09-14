@@ -15,6 +15,7 @@ public class PajeType extends PajeObject {
 		}else{
 			this.depth = 0;
 		}
+		this.parent = parent;
 	}
 
 	public String getName() {
@@ -49,5 +50,11 @@ public class PajeType extends PajeObject {
 		return PajeTypeNature.UndefinedType;
 	}
 	
+	public boolean hasAncestral(PajeType tp){
+		if(this.getParent().equals(tp))
+			return true;
+		else
+			return this.getParent().hasAncestral(tp);
+	}
 
 }
