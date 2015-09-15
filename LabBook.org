@@ -6,3 +6,31 @@
 #+EXPORT_SELECT_TAGS: export
 #+EXPORT_EXCLUDE_TAGS: noexport
 #+SEQ_TODO: TODO(t!) STARTED(s!) WAITING(w!) | DONE(d!) CANCELLED(c!) DEFERRED(f!)
+
+* 2015-09-15 Planning                                            :Lucas:Tais:
+
+|---------+--------------------------------------------------|
+| Sep/Oct | Complete Java Simulator for the Paje file format |
+| Nov/Dec | Database modeling for Paje traces                |
+| Jan/Feb | Experimentation and Performance Evaluation       |
+| Mar/Jun | Write the thesis                                 |
+|---------+--------------------------------------------------|
+
+* 2015-09-15 Structure / Draft of TCC                            :Lucas:Tais:
+
+1. Introduction (3 pages max)
+   + Context (current scenario with pajeng c++)
+   + Motivation
+2. Basic Concepts? (5 pages max)
+   + JavaCC?
+   + Ferramentas de análise de desempenho
+3. PajeNG
+   + How it is used by others (pjdump, etc)
+   + Description of how it works internally
+   + The problems with the current approach
+     + Focus on your contribution
+4. Java Simulator
+   + JavaCC / Perf. Eval. against others / Why JavaCC?
+5. Database modeling
+6. Perf. Eval. / Experimentation / Results
+7. Conclusion
