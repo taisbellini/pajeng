@@ -1,20 +1,14 @@
-Linux: 
+Paje Simulator in Java
+======================
 
-1 - Install JavaCC 
-	sudo apt-get install javacc
- 
-2 - Generate Java Files of the Parser 
-	Go to workspace/JavaCCPajeParser/src/br/ufrgs/inf/tlbellini/ directory and run the following command: 
-	javacc PajeGrammar.jj
+(Text describing this version).
 
-3-  Compile and run  
-	Go back to workspace/JavaCCPajeParser/src/ and run the following commands: 
+## Compilation
 
-	javac br/ufrgs/inf/tlbellini/lib/*.java 
+   Please, refer to the workspace/compile.sh script to compile this version
 
-	javac br/ufrgs/inf/tlbellini/*.java
+## Utilization
 
-	java br.ufrgs.inf.tlbellini.PajeGrammar 
-	OR java br.ufrgs.inf.tlbellini.PajeGrammar <path to input file>
+   Type:
 
-P.s: note that the last command you should run one OR the other, not the whole sentence
+   java br.ufrgs.inf.tlbellini.PajeGrammar <path to input Paje tracefile>
