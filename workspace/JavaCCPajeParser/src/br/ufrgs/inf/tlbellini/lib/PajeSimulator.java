@@ -454,7 +454,6 @@ public class PajeSimulator extends PajeComponent {
 		String containerName = event.valueForField(PajeFieldName.Container);
 		String type = event.valueForField(PajeFieldName.Type);
 		String value = event.valueForField(PajeFieldName.Value);
-		//double time = Double.parseDouble(event.valueForField(PajeFieldName.Time));
 		int line = event.getLine();
 		
 		//check if container type exists and is a state type
@@ -480,14 +479,13 @@ public class PajeSimulator extends PajeComponent {
 		}
 		
 		//check if the value was previously declared
-		  PajeValue pajeValue = null;
-		  if (pajeType.hasValueForIdentifier(value)){
-		    pajeValue = pajeType.valueForIdentifier(value);
-		  }else{
-		    pajeType.addValue(value, value, null);
-		    pajeValue = pajeType.getValues().get(value);
-		  }
-		
+		PajeValue pajeValue = null;
+		if (!pajeType.hasValueForIdentifier(value)){
+			pajeType.addValue(value, value, null);
+		}
+		  
+		pajeValue = pajeType.valueForIdentifier(value);
+			  
 		PajeSetStateEvent setStateEvent = new PajeSetStateEvent(event, container, pajeType, lastKnownTime, pajeValue);
 		container.demuxer(setStateEvent);
 	}

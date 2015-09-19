@@ -101,6 +101,7 @@ public class PajeContainer extends PajeNamedEntity {
 		break;
 		case PajePushState: pajePushState((PajeStateEvent) event);
 		break;
+		case PajePopState: pajePopState((PajeStateEvent) event);
 		default: break;
 		}
 		
@@ -173,10 +174,10 @@ private void pajePushState(PajeStateEvent event) throws Exception{
 		PajeTraceEvent traceEvent = event.getEvent();
 		
 		checkTimeOrder(event);
-		resetState(event);
 		
 		PajeUserState newState = new PajeUserState(this, type, time, value, traceEvent);
-		newState.setImbrication(0);
+		//check if correct: assuming 0, 1 , 2 ...
+		newState.setImbrication(this.stackStates.size());
 		
 		//create entry if empty
 		if(this.entities.isEmpty())
@@ -188,10 +189,30 @@ private void pajePushState(PajeStateEvent event) throws Exception{
 		this.stackStates.get(type).add(newState);
 		
 	}
-	
-	
+
+	// will be the last?
+	// is just searching the hash
+	private void pajePopState(PajeStateEvent event) throws Exception {
+		PajeType type = event.getType();
+		PajeValue value = event.getValue();
+		double time = event.getTime();
+		PajeTraceEvent traceEvent = event.getEvent();
+		
+		checkTimeOrder(event);
+		
+		PajeUserState newState = new PajeUserState(this, type, time, value, traceEvent);
+		
+		if(!this.entities.isEmpty()){
+			if(this.entities.get(type).contains(newState)){
+				
+			}
+		}
+		
+		
+	}
 	
 	//check if trace is correctly ordered
+	// check if correct
 	public boolean checkTimeOrder(PajeEvent event) throws Exception{
 		double time = event.getTime();
 		PajeTraceEvent traceEvent = event.getEvent();
@@ -217,7 +238,7 @@ private void pajePushState(PajeStateEvent event) throws Exception{
 			if(stackStates.containsKey(event.getType())){
 				for (PajeUserState state : this.stackStates.get(event.getType())){
 					state.setEndTime(event.getTime());
-					//can I clear the stack?
+					// TODO clear stack and save db
 				}
 			}
 		}
