@@ -89,13 +89,6 @@ public class PajeSimulator extends PajeComponent {
 			System.out.println(cont.getValue().alias + " of type " + cont.getValue().getType().alias);
 		}
 		
-		//print values
-		//System.out.println("Values created: ");
-		//Set<Map.Entry<String, PajeValue>> valSet = values.entrySet();
-		//for(Map.Entry<String, PajeValue> val: valSet){
-		//	System.out.println(val.getValue().getId());
-		//}
-		
 	}
 	
 	public void simulate(PajeObject data) throws Exception{
@@ -125,6 +118,10 @@ public class PajeSimulator extends PajeComponent {
 			case PajeDestroyContainer: pajeDestroyContainer(event);
 			break;
 			case PajeSetState: pajeSetState(event);
+			break;
+			case PajePushState: pajePushState(event);
+			break;
+			case PajePopState: pajePopState(event);
 			break;
 			default: break;
 		}
@@ -487,6 +484,78 @@ public class PajeSimulator extends PajeComponent {
 		pajeValue = pajeType.valueForIdentifier(value);
 			  
 		PajeSetStateEvent setStateEvent = new PajeSetStateEvent(event, container, pajeType, lastKnownTime, pajeValue);
+		container.demuxer(setStateEvent);
+	}
+	
+	public void pajePushState(PajeTraceEvent event) throws Exception{
+		String containerName = event.valueForField(PajeFieldName.Container);
+		String type = event.valueForField(PajeFieldName.Type);
+		String value = event.valueForField(PajeFieldName.Value);
+		int line = event.getLine();
+		
+		//check if container type exists and is a state type
+		if(!typeMap.containsKey(type)){
+			throw new Exception("The type " + type + " refered in line " + line + " is not defined");
+		}
+		if(!typeMap.get(type).getNature().equals(PajeTypeNature.StateType)){
+			throw new Exception("Type " + type + " used in line " + line + " is not a state type");
+		}
+		PajeStateType pajeType = (PajeStateType) typeMap.get(type);
+		
+		//check if container exists
+		PajeContainer container;
+		if(contMap.containsKey(containerName)){
+			container = contMap.get(containerName);
+		}else 
+			throw new Exception("Container "+ containerName + " defined in line " + line + " does not exist");
+
+		//check if type is a child of container type
+		PajeContainerType containerType = (PajeContainerType) container.getType();
+		if(!pajeType.hasAncestral(containerType)){
+			throw new Exception ("Type " + type + " is not a child type of the container type of " + containerName);
+		}
+		
+		//check if the value was previously declared
+		//exception following the Note in the paje documentation
+		PajeValue pajeValue = null;
+		if (!pajeType.hasValueForIdentifier(value)){
+			throw new Exception ("There is no existing value to be saved in line " + line);	
+		}else{
+			pajeValue = pajeType.valueForIdentifier(value);
+		}
+			  
+		PajePushStateEvent setStateEvent = new PajePushStateEvent(event, container, pajeType, lastKnownTime, pajeValue);
+		container.demuxer(setStateEvent);
+	}
+	
+	public void pajePopState(PajeTraceEvent event) throws Exception{
+		String containerName = event.valueForField(PajeFieldName.Container);
+		String type = event.valueForField(PajeFieldName.Type);
+		int line = event.getLine();
+		
+		//check if type exists and is a state type
+		if(!typeMap.containsKey(type)){
+			throw new Exception("The type " + type + " refered in line " + line + " is not defined");
+		}
+		if(!typeMap.get(type).getNature().equals(PajeTypeNature.StateType)){
+			throw new Exception("Type " + type + " used in line " + line + " is not a state type");
+		}
+		PajeStateType pajeType = (PajeStateType) typeMap.get(type);
+		
+		//check if container exists
+		PajeContainer container;
+		if(contMap.containsKey(containerName)){
+			container = contMap.get(containerName);
+		}else 
+			throw new Exception("Container "+ containerName + " defined in line " + line + " does not exist");
+
+		//check if type is a child of container type
+		PajeContainerType containerType = (PajeContainerType) container.getType();
+		if(!pajeType.hasAncestral(containerType)){
+			throw new Exception ("Type " + type + " is not a child type of the container type of " + containerName);
+		}
+			  
+		PajePopStateEvent setStateEvent = new PajePopStateEvent(event, container, pajeType, lastKnownTime);
 		container.demuxer(setStateEvent);
 	}
 	

@@ -1,6 +1,0 @@
-%EventDef PajeDefineContainerType 0 
-%       Alias string 
-%       Type string 
-%       Name string 
-0 1 0 HOST
-0 3 0 LINK

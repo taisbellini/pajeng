@@ -134,10 +134,8 @@ public class PajeContainer extends PajeNamedEntity {
 		//TODO
 		
 		//end stack 
-		System.out.println("setou time pra " + time + " in entities e o stack?");
 		for(Map.Entry<PajeType, ArrayList<PajeUserState>> entry : this.stackStates.entrySet()){
 			for(PajeEntity ent : entry.getValue()){
-				System.out.println("End time no stack" + ((PajeDoubleTimedEntity) ent).getEndTime());
 				//TODO salvar no bd e remover
 				((PajeDoubleTimedEntity) ent).setEndTime(time);
 			}
@@ -175,15 +173,15 @@ private void pajePushState(PajeStateEvent event) throws Exception{
 		
 		checkTimeOrder(event);
 		
+		//does not create if doesn't exist
+		if(this.entities.isEmpty() || !this.entities.containsKey(type))
+			throw new Exception("A Push State for type " + type.getAlias() + " was done in line " + traceEvent.getLine() + " before a Set State for the type");
+		if(this.stackStates.isEmpty() || !this.stackStates.containsKey(type))
+			throw new Exception("A Push State for type " + type.getAlias() + " was done in line " + traceEvent.getLine() + " before a Set State for the type");
+		
 		PajeUserState newState = new PajeUserState(this, type, time, value, traceEvent);
 		//check if correct: assuming 0, 1 , 2 ...
 		newState.setImbrication(this.stackStates.size());
-		
-		//create entry if empty
-		if(this.entities.isEmpty())
-			this.entities.put(type, new ArrayList<PajeEntity>());
-		if(this.stackStates.isEmpty())
-			this.stackStates.put(type, new ArrayList<PajeUserState>());
 		
 		this.entities.get(type).add(newState);
 		this.stackStates.get(type).add(newState);
@@ -194,21 +192,25 @@ private void pajePushState(PajeStateEvent event) throws Exception{
 	// is just searching the hash
 	private void pajePopState(PajeStateEvent event) throws Exception {
 		PajeType type = event.getType();
-		PajeValue value = event.getValue();
 		double time = event.getTime();
 		PajeTraceEvent traceEvent = event.getEvent();
 		
 		checkTimeOrder(event);
 		
-		PajeUserState newState = new PajeUserState(this, type, time, value, traceEvent);
-		
-		if(!this.entities.isEmpty()){
-			if(this.entities.get(type).contains(newState)){
-				
-			}
+		//get last push from that type
+		if(!this.entities.isEmpty() && this.entities.containsKey(type)){
+				((PajeDoubleTimedEntity) this.entities.get(type).get(this.entities.get(type).size()-1)).setEndTime(time);
+				//TODO actually remove
+		}else{
+			throw new Exception("Trying to Pop a State of type "+ type.getAlias() + " that was not previously Pushed in line " + traceEvent.getLine());
 		}
 		
-		
+		if(!this.stackStates.isEmpty() && this.stackStates.containsKey(type)){
+			this.stackStates.get(type).get(this.stackStates.get(type).size() -1).setEndTime(time);
+			//TODO actually remove
+		}else{
+			throw new Exception("Trying to Pop a State of type "+ type.getAlias() + " that was not previously Pushed in line " + traceEvent.getLine());
+		}
 	}
 	
 	//check if trace is correctly ordered
