@@ -17,8 +17,11 @@ public class PajeUserVariable extends PajeDoubleTimedEntity {
 	}
 
 	public void addValue(double addVal) {
-		this.value += addVal;
-		
+		this.value += addVal;	
+	}
+	
+	public void subValue(double subVal){
+		this.value -= subVal;
 	}
 
 }

@@ -131,6 +131,8 @@ public class PajeSimulator extends PajeComponent {
 			break;
 			case PajeAddVariable: pajeAddVariable(event);
 			break;
+			case PajeSubVariable: pajeSubVariable(event);
+			break;
 			default: break;
 		}
 	}
@@ -679,8 +681,36 @@ public class PajeSimulator extends PajeComponent {
 
 		double val = Double.parseDouble(value);
 		
-		PajeAddVariableEvent setVariableEvent = new PajeAddVariableEvent(event, container, pajeType, lastKnownTime, val);
-		container.demuxer(setVariableEvent);
+		PajeAddVariableEvent addVariableEvent = new PajeAddVariableEvent(event, container, pajeType, lastKnownTime, val);
+		container.demuxer(addVariableEvent);
+	}
+	
+	public void pajeSubVariable(PajeTraceEvent event) throws Exception{
+		String type = event.valueForField(PajeFieldName.Type);
+		String containerName = event.valueForField(PajeFieldName.Container);
+		String value = event.valueForField(PajeFieldName.Value);
+		int line = event.getLine();
+		
+		if(!typeMap.get(type).getNature().equals(PajeTypeNature.VariableType)){
+			throw new Exception("Type " + type + " used in line " + line + " is not a variable type");
+		}
+		PajeVariableType pajeType = (PajeVariableType) typeMap.get(type);
+		
+		PajeContainer container;
+		if(contMap.containsKey(containerName)){
+			container = contMap.get(containerName);
+		}else 
+			throw new Exception("Container "+ containerName + " defined in line " + line + " does not exist");
+		
+		PajeContainerType containerType = (PajeContainerType) container.getType();
+		if(!pajeType.hasAncestral(containerType)){
+			throw new Exception ("Type " + type + " is not a child type of the container type of " + containerName);
+		}
+
+		double val = Double.parseDouble(value);
+		
+		PajeSubVariableEvent subVariableEvent = new PajeSubVariableEvent(event, container, pajeType, lastKnownTime, val);
+		container.demuxer(subVariableEvent);
 	}
 	
 
