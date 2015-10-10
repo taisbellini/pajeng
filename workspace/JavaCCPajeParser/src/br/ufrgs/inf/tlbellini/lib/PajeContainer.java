@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 
 public class PajeContainer extends PajeNamedEntity {
 	
@@ -110,6 +111,7 @@ public class PajeContainer extends PajeNamedEntity {
 		break;
 		case PajeSetVariable: pajeSetVariable((PajeVariableEvent) event);
 		break;
+		case PajeAddVariable: pajeAddVariable((PajeVariableEvent) event);
 		default: break;
 		}
 		
@@ -259,8 +261,34 @@ private void pajePushState(PajeStateEvent event) throws Exception{
 		}
 		
 		PajeUserVariable newValue = new PajeUserVariable(this, type, time, value, traceEvent);		
-		this.entities.get(type).add(newValue);
+		this.entities.get(type).add(newValue);	
+	}
+	
+	private void pajeAddVariable(PajeVariableEvent event) throws Exception{
+		double time = event.getTime();
+		PajeType type = event.getType();
+		double value = event.getDoubleValue();
+		PajeTraceEvent traceEvent = event.getEvent();
+		double lastVal = 0;
+			
+		if(!this.entities.containsKey(type) || this.entities.get(type).isEmpty())
+			throw new Exception("Illegal addition to a variable that has no value (yet) in "+ traceEvent.getLine());
 		
+		checkTimeOrder(event);
+		
+		PajeEntity last = this.entities.get(type).get(this.entities.get(type).size() -1);
+		if(((PajeUserVariable) last).getStartTime() == time){
+			((PajeUserVariable) last).addValue(value);
+			return;				
+		}else{
+			((PajeDoubleTimedEntity) last).setEndTime(time);
+			//TODO put in bd
+		}
+		lastVal = ((PajeUserVariable) last).getValue();
+		
+		//add variable with new value
+		PajeUserVariable newValue = new PajeUserVariable(this, type, time, lastVal + value, traceEvent);		
+		this.entities.get(type).add(newValue);
 		
 	}
 	
