@@ -123,6 +123,10 @@ public class PajeSimulator extends PajeComponent {
 			break;
 			case PajePopState: pajePopState(event);
 			break;
+			case PajeResetState: pajeResetState(event);
+			break;
+			case PajeNewEvent: pajeNewEvent(event);
+			break;
 			default: break;
 		}
 	}
@@ -442,8 +446,7 @@ public class PajeSimulator extends PajeComponent {
 		}
 		
 		//create event to sent to demuxer (necessary?? could we use the trace event?)
-		PajeDestroyContainerEvent destroyEvent = new PajeDestroyContainerEvent(event, container, pajeType);
-		destroyEvent.setTime(lastKnownTime);
+		PajeDestroyContainerEvent destroyEvent = new PajeDestroyContainerEvent(event, container, pajeType, lastKnownTime);
 		container.demuxer(destroyEvent);
 	}
 	
@@ -516,10 +519,11 @@ public class PajeSimulator extends PajeComponent {
 		}
 		
 		//check if the value was previously declared
-		//exception following the Note in the paje documentation
+		//commented: exception following the Note in the paje documentation
 		PajeValue pajeValue = null;
 		if (!pajeType.hasValueForIdentifier(value)){
-			throw new Exception ("There is no existing value to be saved in line " + line);	
+			pajeType.addValue(value, value, null);
+			//throw new Exception ("There is no existing value to be saved in line " + line);	
 		}else{
 			pajeValue = pajeType.valueForIdentifier(value);
 		}
@@ -549,14 +553,77 @@ public class PajeSimulator extends PajeComponent {
 		}else 
 			throw new Exception("Container "+ containerName + " defined in line " + line + " does not exist");
 
+		PajePopStateEvent setStateEvent = new PajePopStateEvent(event, container, pajeType, lastKnownTime);
+		container.demuxer(setStateEvent);
+	}
+	
+	public void pajeResetState(PajeTraceEvent event) throws Exception{
+		String containerName = event.valueForField(PajeFieldName.Container);
+		String type = event.valueForField(PajeFieldName.Type);
+		int line = event.getLine();
+		
+		if(!typeMap.get(type).getNature().equals(PajeTypeNature.StateType)){
+			throw new Exception("Type " + type + " used in line " + line + " is not a state type");
+		}
+		PajeStateType pajeType = (PajeStateType) typeMap.get(type);
+		
+		//check if container exists
+		PajeContainer container;
+		if(contMap.containsKey(containerName)){
+			container = contMap.get(containerName);
+		}else 
+			throw new Exception("Container "+ containerName + " defined in line " + line + " does not exist");
+		
 		//check if type is a child of container type
 		PajeContainerType containerType = (PajeContainerType) container.getType();
 		if(!pajeType.hasAncestral(containerType)){
 			throw new Exception ("Type " + type + " is not a child type of the container type of " + containerName);
 		}
-			  
-		PajePopStateEvent setStateEvent = new PajePopStateEvent(event, container, pajeType, lastKnownTime);
-		container.demuxer(setStateEvent);
+		
+		PajeResetStateEvent resetStateEvent = new PajeResetStateEvent(event, container, pajeType, lastKnownTime);
+		container.demuxer(resetStateEvent);	
+		
+	}
+	
+	public void pajeNewEvent(PajeTraceEvent event) throws Exception{
+		String type = event.valueForField(PajeFieldName.Type);
+		String containerName = event.valueForField(PajeFieldName.Container);
+		String value = event.valueForField(PajeFieldName.Value);
+		int line = event.getLine();
+		
+		
+		if(!typeMap.get(type).getNature().equals(PajeTypeNature.EventType)){
+			throw new Exception("Type " + type + " used in line " + line + " is not an event type");
+		}
+		PajeEventType pajeType = (PajeEventType) typeMap.get(type);
+		
+		//check if container exists
+		PajeContainer container;
+		if(contMap.containsKey(containerName)){
+			container = contMap.get(containerName);
+		}else 
+			throw new Exception("Container "+ containerName + " defined in line " + line + " does not exist");
+		
+		PajeContainerType containerType = (PajeContainerType) container.getType();
+		if(!pajeType.hasAncestral(containerType)){
+			throw new Exception ("Type " + type + " is not a child type of the container type of " + containerName);
+		}
+		
+		//check if the value was previously declared
+		//commented: exception following the Note in the paje documentation
+		PajeValue pajeValue = null;
+		if (!pajeType.hasValueForIdentifier(value)){
+			pajeType.addValue(value, value, null);
+			//throw new Exception ("There is no existing value to be saved in line " + line);	
+		}
+		pajeValue = pajeType.valueForIdentifier(value); 
+		
+		PajeNewEventEvent newEventEvent = new PajeNewEventEvent(event, container, pajeType, lastKnownTime, pajeValue);
+		container.demuxer(newEventEvent);
+		
+		
+		
+		
 	}
 	
 

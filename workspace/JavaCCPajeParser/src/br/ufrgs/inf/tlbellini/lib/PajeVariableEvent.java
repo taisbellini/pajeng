@@ -4,8 +4,8 @@ public class PajeVariableEvent extends PajeEvent {
 	
 	private double doubleValue;
 
-	public PajeVariableEvent(PajeTraceEvent event, PajeContainer container, PajeType type) {
-		super(event, container, type);
+	public PajeVariableEvent(PajeTraceEvent event, PajeContainer container, PajeType type, double time) {
+		super(event, container, type, time);
 	}
 
 	public double getDoubleValue() {

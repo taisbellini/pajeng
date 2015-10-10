@@ -16,9 +16,10 @@ public class PajeContainer extends PajeNamedEntity {
 	
 	private Map<PajeType, String> linksUsedKeys = new HashMap<PajeType, String>(); //used keys for this container
 	private Map<PajeType, Map<String, PajeUserLink>> pendingLinks;
-	private Map<PajeType, ArrayList<PajeUserState>> stackStates = new HashMap<PajeType, ArrayList<PajeUserState>>(); //stack for state types
 	
+	private Map<PajeType, ArrayList<PajeUserState>> stackStates = new HashMap<PajeType, ArrayList<PajeUserState>>(); //stack for state types
 	// keep all simulated entities
+	
 	private Map<PajeType, ArrayList<PajeEntity>> entities = new HashMap<PajeType, ArrayList<PajeEntity>>();
 	
 	
@@ -102,6 +103,11 @@ public class PajeContainer extends PajeNamedEntity {
 		case PajePushState: pajePushState((PajeStateEvent) event);
 		break;
 		case PajePopState: pajePopState((PajeStateEvent) event);
+		break;
+		case PajeResetState: pajeResetState(event);
+		break;
+		case PajeNewEvent: pajeNewEvent((PajeNewEventEvent) event);
+		break;
 		default: break;
 		}
 		
@@ -148,8 +154,7 @@ public class PajeContainer extends PajeNamedEntity {
 		PajeValue value = event.getValue();
 		double time = event.getTime();
 		PajeTraceEvent traceEvent = event.getEvent();
-		checkTimeOrder(event);
-		resetState(event);
+		pajeResetState(event);
 		
 		PajeUserState newState = new PajeUserState(this, type, time, value, traceEvent);
 		newState.setImbrication(0);
@@ -213,6 +218,22 @@ private void pajePushState(PajeStateEvent event) throws Exception{
 		}
 	}
 	
+	private void pajeNewEvent(PajeNewEventEvent event) throws Exception{
+		PajeType type = event.getType();
+		PajeValue value = event.getValue();
+		double time = event.getTime();
+		PajeTraceEvent traceEvent = event.getEvent();
+		
+		checkTimeOrder(event);
+		PajeUserEvent newEvent = new PajeUserEvent(this, type, time, value, traceEvent);
+		
+		//check if the type for the event exists in container
+		if(this.entities.isEmpty() || !this.entities.containsKey(type))
+			this.entities.put(type, new ArrayList<PajeEntity>());
+		this.entities.get(type).add(newEvent);
+		
+	}
+	
 	//check if trace is correctly ordered
 	// check if correct
 	public boolean checkTimeOrder(PajeEvent event) throws Exception{
@@ -223,7 +244,7 @@ private void pajePushState(PajeStateEvent event) throws Exception{
 			 if(this.entities.containsKey(event.getType())){
 				 ArrayList<PajeEntity> v = this.entities.get(event.getType());
 				if(!v.isEmpty()){
-					PajeDoubleTimedEntity last = (PajeDoubleTimedEntity) v.get(v.size()-1);
+					PajeSingleTimedEntity last = (PajeSingleTimedEntity) v.get(v.size()-1);
 					if((last.getStartTime() > time) || last.getEndTime() != -1 && last.getEndTime() > time){
 						throw new Exception ("Trace is not time-ordered	in "+ traceEvent.getLine());
 					}
@@ -233,8 +254,8 @@ private void pajePushState(PajeStateEvent event) throws Exception{
 		return true;
 	}
 	
-	public void resetState (PajeEvent event) throws Exception{
-		//checkTimeOrder (event);
+	public void pajeResetState (PajeEvent event) throws Exception{
+		checkTimeOrder (event);
 		
 		if(!this.stackStates.isEmpty()){
 			if(stackStates.containsKey(event.getType())){

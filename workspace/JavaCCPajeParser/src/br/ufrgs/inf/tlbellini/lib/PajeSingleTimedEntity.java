@@ -16,5 +16,10 @@ public class PajeSingleTimedEntity extends PajeEntity {
 	public void setStartTime(double startTime) {
 		this.startTime = startTime;
 	}
+	
+	//to check time order
+	public double getEndTime(){
+		return -1;
+	}
 
 }

@@ -7,10 +7,11 @@ public class PajeEvent extends PajeObject {
 	private PajeType type;
 	private double time;
 
-	public PajeEvent(PajeTraceEvent event, PajeContainer container, PajeType type) {
+	public PajeEvent(PajeTraceEvent event, PajeContainer container, PajeType type, double time) {
 		this.setEvent(event);
 		this.setContainer(container);
 		this.setType(type);
+		this.setTime(time);
 	}
 
 	public PajeTraceEvent getEvent() {

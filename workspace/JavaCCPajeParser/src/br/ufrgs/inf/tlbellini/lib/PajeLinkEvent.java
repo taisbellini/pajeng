@@ -6,8 +6,8 @@ public class PajeLinkEvent extends PajeCategorizedEvent {
 	
 	private String key;
 
-	public PajeLinkEvent(PajeTraceEvent event, PajeContainer container, PajeType type) {
-		super(event, container, type);
+	public PajeLinkEvent(PajeTraceEvent event, PajeContainer container, PajeType type, double time) {
+		super(event, container, type, time);
 	}
 
 

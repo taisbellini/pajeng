@@ -4,8 +4,8 @@ public class PajeCategorizedEvent extends PajeEvent {
 	
 	private PajeValue value;
 
-	public PajeCategorizedEvent(PajeTraceEvent event, PajeContainer container, PajeType type) {
-		super(event, container, type);
+	public PajeCategorizedEvent(PajeTraceEvent event, PajeContainer container, PajeType type, double time) {
+		super(event, container, type, time);
 	}
 
 	public PajeValue getValue() {
