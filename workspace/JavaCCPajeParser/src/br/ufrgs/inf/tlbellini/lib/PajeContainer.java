@@ -106,7 +106,9 @@ public class PajeContainer extends PajeNamedEntity {
 		break;
 		case PajeResetState: pajeResetState(event);
 		break;
-		case PajeNewEvent: pajeNewEvent((PajeNewEventEvent) event);
+		case PajeNewEvent: pajeNewEvent((PajeEventEvent) event);
+		break;
+		case PajeSetVariable: pajeSetVariable((PajeVariableEvent) event);
 		break;
 		default: break;
 		}
@@ -193,8 +195,7 @@ private void pajePushState(PajeStateEvent event) throws Exception{
 		
 	}
 
-	// will be the last?
-	// is just searching the hash
+	// will be the last? searches the hash for type and gets the last
 	private void pajePopState(PajeStateEvent event) throws Exception {
 		PajeType type = event.getType();
 		double time = event.getTime();
@@ -218,7 +219,7 @@ private void pajePushState(PajeStateEvent event) throws Exception{
 		}
 	}
 	
-	private void pajeNewEvent(PajeNewEventEvent event) throws Exception{
+	private void pajeNewEvent(PajeEventEvent event) throws Exception{
 		PajeType type = event.getType();
 		PajeValue value = event.getValue();
 		double time = event.getTime();
@@ -231,6 +232,35 @@ private void pajePushState(PajeStateEvent event) throws Exception{
 		if(this.entities.isEmpty() || !this.entities.containsKey(type))
 			this.entities.put(type, new ArrayList<PajeEntity>());
 		this.entities.get(type).add(newEvent);
+		
+	}
+	
+	private void pajeSetVariable(PajeVariableEvent event) throws Exception{
+		double time = event.getTime();
+		PajeType type = event.getType();
+		double value = event.getDoubleValue();
+		PajeTraceEvent traceEvent = event.getEvent();
+		
+		checkTimeOrder(event);
+		
+		if(!this.entities.containsKey(type))
+			this.entities.put(type, new ArrayList<PajeEntity>());
+		
+		//if same timestamp, just replaces value
+		if(!this.entities.get(type).isEmpty()){
+			PajeEntity last = this.entities.get(type).get(this.entities.get(type).size() -1);
+	
+			if(((PajeUserVariable) last).getStartTime() == time){
+				((PajeUserVariable) last).setValue(value);
+				return;				
+			}else{
+				((PajeDoubleTimedEntity) last).setEndTime(time);
+			}
+		}
+		
+		PajeUserVariable newValue = new PajeUserVariable(this, type, time, value, traceEvent);		
+		this.entities.get(type).add(newValue);
+		
 		
 	}
 	
