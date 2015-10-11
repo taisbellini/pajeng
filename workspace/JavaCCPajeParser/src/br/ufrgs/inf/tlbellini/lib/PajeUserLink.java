@@ -10,7 +10,7 @@ public class PajeUserLink extends PajeValueEntity {
 		super(container, type, time, value, event);
 		this.setKey(key);
 		this.setStartContainer(startContainer);
-		this.setContainer(null);
+		this.setContainer(container);
 	}
 
 	public String getKey() {

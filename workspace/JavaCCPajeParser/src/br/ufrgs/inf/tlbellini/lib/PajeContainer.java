@@ -2,6 +2,7 @@ package br.ufrgs.inf.tlbellini.lib;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -117,6 +118,8 @@ public class PajeContainer extends PajeNamedEntity {
 		case PajeSubVariable: pajeSubVariable((PajeVariableEvent) event);
 		break;
 		case PajeStartLink: pajeStartLink((PajeLinkEvent) event);
+		break;
+		case PajeEndLink: pajeEndLink((PajeLinkEvent) event);
 		break;
 		default: break;
 		}
@@ -360,6 +363,52 @@ private void pajePushState(PajeStateEvent event) throws Exception{
 			this.entities.get(type).add(link);
 			
 			pendingLinks.get(type).remove(key);
+			if(!linksUsedKeys.containsKey(type))
+				linksUsedKeys.put(type, new HashSet<String>());
+			linksUsedKeys.get(type).add(key);
+			
+		}
+	}
+	
+	public void pajeEndLink(PajeLinkEvent event) throws Exception{
+		double time = event.getTime();
+		PajeType type = event.getType();
+		String key = event.getKey();
+		PajeValue value = event.getValue();
+		PajeTraceEvent traceEvent = event.getEvent();
+		PajeContainer endContainer = event.getLinkedContainer();
+		
+		if (this.linksUsedKeys.containsKey(type) && this.linksUsedKeys.get(type).contains(key)){
+		    throw new Exception ("Illegal event in "+traceEvent.getLine()+", the key was already used for another link");
+		  }
+
+		if(!pendingLinks.containsKey(type))
+			pendingLinks.put(type, new HashMap<String, PajeUserLink>());
+		
+		if(!pendingLinks.get(type).containsKey(key)){
+			PajeUserLink link = new PajeUserLink(this, type, time, value, key, null, traceEvent);
+			link.setEndContainer(endContainer);
+			pendingLinks.get(type).put(key, link);
+		}else{
+			//there is a PajeStartLink
+			PajeUserLink link = pendingLinks.get(type).get(key);
+			link.setStartTime(time);
+			link.setEndContainer(endContainer);
+			
+			//check the consistency between end and start links
+			if(!link.getValue().equals(value))
+				throw new Exception("Illegal PajeStartLink in "+traceEvent.getLine()+", value is different from the value of the corresponding PajeEndLink (which had "+link.getValue().getAlias() +")");
+			
+			checkTimeOrder(event);
+			
+			if(!this.entities.containsKey(type))
+				this.entities.put(type, new ArrayList<PajeEntity>());
+			
+			this.entities.get(type).add(link);
+			
+			pendingLinks.get(type).remove(key);
+			if(!linksUsedKeys.containsKey(type))
+				linksUsedKeys.put(type, new HashSet<String>());
 			linksUsedKeys.get(type).add(key);
 			
 		}
