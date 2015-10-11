@@ -21,19 +21,19 @@ public class PajeUserLink extends PajeValueEntity {
 		this.key = key;
 	}
 
-	private PajeContainer getStartContainer() {
+	public PajeContainer getStartContainer() {
 		return startContainer;
 	}
 
-	private void setStartContainer(PajeContainer startContainer) {
+	public void setStartContainer(PajeContainer startContainer) {
 		this.startContainer = startContainer;
 	}
 
-	private PajeContainer getEndContainer() {
+	public PajeContainer getEndContainer() {
 		return endContainer;
 	}
 
-	private void setEndContainer(PajeContainer endContainer) {
+	public void setEndContainer(PajeContainer endContainer) {
 		this.endContainer = endContainer;
 	}
 

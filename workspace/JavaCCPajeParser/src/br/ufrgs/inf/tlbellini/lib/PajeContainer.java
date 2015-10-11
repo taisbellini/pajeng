@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 public class PajeContainer extends PajeNamedEntity {
 	
@@ -15,8 +16,8 @@ public class PajeContainer extends PajeNamedEntity {
 	public Map<String, PajeContainer> children = new HashMap<String, PajeContainer>();
 	public int depth;
 	
-	private Map<PajeType, String> linksUsedKeys = new HashMap<PajeType, String>(); //used keys for this container
-	private Map<PajeType, Map<String, PajeUserLink>> pendingLinks;
+	private Map<PajeType, Set<String>> linksUsedKeys = new HashMap<PajeType, Set<String>>(); //used keys for this container
+	private Map<PajeType, Map<String, PajeUserLink>> pendingLinks = new HashMap<PajeType, Map<String, PajeUserLink>>();
 	
 	private Map<PajeType, ArrayList<PajeUserState>> stackStates = new HashMap<PajeType, ArrayList<PajeUserState>>(); //stack for state types
 	// keep all simulated entities
@@ -114,6 +115,8 @@ public class PajeContainer extends PajeNamedEntity {
 		case PajeAddVariable: pajeAddVariable((PajeVariableEvent) event);
 		break;
 		case PajeSubVariable: pajeSubVariable((PajeVariableEvent) event);
+		break;
+		case PajeStartLink: pajeStartLink((PajeLinkEvent) event);
 		break;
 		default: break;
 		}
@@ -319,6 +322,47 @@ private void pajePushState(PajeStateEvent event) throws Exception{
 		//add variable with new value
 		PajeUserVariable newValue = new PajeUserVariable(this, type, time, lastVal + value, traceEvent);		
 		this.entities.get(type).add(newValue);
+	}
+	
+	public void pajeStartLink(PajeLinkEvent event) throws Exception{
+		double time = event.getTime();
+		PajeType type = event.getType();
+		String key = event.getKey();
+		PajeValue value = event.getValue();
+		PajeTraceEvent traceEvent = event.getEvent();
+		PajeContainer startContainer = event.getLinkedContainer();
+		
+		if (this.linksUsedKeys.containsKey(type) && this.linksUsedKeys.get(type).contains(key)){
+		    throw new Exception ("Illegal event in "+traceEvent.getLine()+", the key was already used for another link");
+		  }
+
+		if(!pendingLinks.containsKey(type))
+			pendingLinks.put(type, new HashMap<String, PajeUserLink>());
+		
+		if(!pendingLinks.get(type).containsKey(key)){
+			PajeUserLink link = new PajeUserLink(this, type, time, value, key, startContainer, traceEvent);
+			pendingLinks.get(type).put(key, link);
+		}else{
+			//there is a PajeEndLink
+			PajeUserLink link = pendingLinks.get(type).get(key);
+			link.setStartTime(time);
+			link.setStartContainer(startContainer);
+			
+			//check the consistency between end and start links
+			if(!link.getValue().equals(value))
+				throw new Exception("Illegal PajeStartLink in "+traceEvent.getLine()+", value is different from the value of the corresponding PajeEndLink (which had "+link.getValue().getAlias() +")");
+			
+			checkTimeOrder(event);
+			
+			if(!this.entities.containsKey(type))
+				this.entities.put(type, new ArrayList<PajeEntity>());
+			
+			this.entities.get(type).add(link);
+			
+			pendingLinks.get(type).remove(key);
+			linksUsedKeys.get(type).add(key);
+			
+		}
 	}
 	
 	//check if trace is correctly ordered

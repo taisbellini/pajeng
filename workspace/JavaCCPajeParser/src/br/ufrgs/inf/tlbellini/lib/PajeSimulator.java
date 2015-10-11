@@ -133,6 +133,8 @@ public class PajeSimulator extends PajeComponent {
 			break;
 			case PajeSubVariable: pajeSubVariable(event);
 			break;
+			case PajeStartLink: pajeStartLink(event);
+			break;
 			default: break;
 		}
 	}
@@ -711,6 +713,54 @@ public class PajeSimulator extends PajeComponent {
 		
 		PajeSubVariableEvent subVariableEvent = new PajeSubVariableEvent(event, container, pajeType, lastKnownTime, val);
 		container.demuxer(subVariableEvent);
+	}
+	
+	public void pajeStartLink(PajeTraceEvent event) throws Exception{
+		String type = event.valueForField(PajeFieldName.Type);
+		String containerName = event.valueForField(PajeFieldName.Container);
+		String startContainerName = event.valueForField(PajeFieldName.StartContainer);
+		String value = event.valueForField(PajeFieldName.Value);
+		String key = event.valueForField(PajeFieldName.Key);
+		int line = event.getLine();
+		
+		PajeContainer container;
+		if(contMap.containsKey(containerName)){
+			container = contMap.get(containerName);
+		}else 
+			throw new Exception("Container "+ containerName + " defined in line " + line + " does not exist");
+		
+		PajeContainer startContainer = null;
+		if(contMap.containsKey(startContainerName)){
+			startContainer = contMap.get(startContainerName);
+		}else 
+			throw new Exception("Container "+ startContainerName + " defined in line " + line + " does not exist");
+		
+		if(!typeMap.get(type).getNature().equals(PajeTypeNature.LinkType)){
+			throw new Exception("Type " + type + " used in line " + line + " is not a link type");
+		}
+		PajeLinkType pajeType = (PajeLinkType) typeMap.get(type);
+		
+		PajeContainerType containerType = (PajeContainerType) container.getType();
+		if(!pajeType.hasAncestral(containerType)){
+			throw new Exception ("Type " + type + " is not a child type of the container type of " + containerName);
+		}
+		
+		//check if start type defined in the link type is the same as the start container type
+		if(!pajeType.getStartType().equals(startContainer.getType()))
+				throw new Exception ("Type " + type + " does not have "+ startContainerName + " as start container type in line " + line);
+		
+		//check if the value was previously declared
+		//commented: exception following the Note in the paje documentation
+		PajeValue pajeValue = null;
+		if (!pajeType.hasValueForIdentifier(value)){
+			pajeType.addValue(value, value, null);
+			//throw new Exception ("There is no existing value to be saved in line " + line);	
+		}
+		pajeValue = pajeType.valueForIdentifier(value); 
+		
+		PajeStartLinkEvent startLinkEvent = new PajeStartLinkEvent(event, container, startContainer, pajeType, lastKnownTime, pajeValue , key);
+		container.demuxer(startLinkEvent);
+				
 	}
 	
 
