@@ -80,7 +80,7 @@ public class PajeContainer extends PajeNamedEntity {
 			return;
 		}
 		/*double lastKnownTime = event.getTime();
-		 *
+		 
 		 * deciding if necessary
 		if(this.stopSimulationAt != -1){
 			if(lastKnownTime > this.stopSimulationAt){
@@ -136,21 +136,21 @@ public class PajeContainer extends PajeNamedEntity {
 		
 	}
 	
-	private void destroy (double time){
+	private void destroy (double time) throws Exception{
 		
 		this.setDestroyed(true);
 		this.setEndTime(time);
 		
-		//finish all entities
-		for(Map.Entry<PajeType, ArrayList<PajeEntity>> entry : this.entities.entrySet()){
-			for(PajeEntity ent : entry.getValue()){
-				//TODO salvar no bd e remover
-				((PajeDoubleTimedEntity) ent).setEndTime(time);
-			}
+		//finish all entities - set end time in last entity of array
+		for(Map.Entry<PajeType, ArrayList<PajeEntity>> entry : this.getEntities().entrySet()){
+			ArrayList<PajeEntity> list = entry.getValue();
+			if(((PajeDoubleTimedEntity) list.get(list.size()-1)).getEndTime() == -1)
+				((PajeDoubleTimedEntity) list.get(list.size()-1)).setEndTime(time);
 		}
 		
 		//check pending links
-		//TODO
+		if(!this.pendingLinks.isEmpty())
+			throw new Exception("Can't destroy container " + this.alias + " because it has pending links");
 		
 		//end stack 
 		for(Map.Entry<PajeType, ArrayList<PajeUserState>> entry : this.stackStates.entrySet()){
@@ -159,6 +159,10 @@ public class PajeContainer extends PajeNamedEntity {
 				((PajeDoubleTimedEntity) ent).setEndTime(time);
 			}
 		}
+		
+		//destroy recursively?
+		
+		
 	}
 	
 	private void pajeSetState(PajeStateEvent event) throws Exception{
@@ -172,12 +176,12 @@ public class PajeContainer extends PajeNamedEntity {
 		PajeUserState newState = new PajeUserState(this, type, time, value, traceEvent);
 		newState.setImbrication(0);
 		//create entry if empty
-		if(this.entities.isEmpty() || !this.entities.containsKey(type))
-			this.entities.put(type, new ArrayList<PajeEntity>());
+		if(this.getEntities().isEmpty() || !this.getEntities().containsKey(type))
+			this.getEntities().put(type, new ArrayList<PajeEntity>());
 		if(this.stackStates.isEmpty() || !this.stackStates.containsKey(type))
 			this.stackStates.put(type, new ArrayList<PajeUserState>());
 		
-		this.entities.get(type).add(newState);
+		this.getEntities().get(type).add(newState);
 		this.stackStates.get(type).add(newState);
 		
 	}
@@ -192,7 +196,7 @@ private void pajePushState(PajeStateEvent event) throws Exception{
 		checkTimeOrder(event);
 		
 		//does not create if doesn't exist
-		if(this.entities.isEmpty() || !this.entities.containsKey(type))
+		if(this.getEntities().isEmpty() || !this.getEntities().containsKey(type))
 			throw new Exception("A Push State for type " + type.getAlias() + " was done in line " + traceEvent.getLine() + " before a Set State for the type");
 		if(this.stackStates.isEmpty() || !this.stackStates.containsKey(type))
 			throw new Exception("A Push State for type " + type.getAlias() + " was done in line " + traceEvent.getLine() + " before a Set State for the type");
@@ -201,7 +205,7 @@ private void pajePushState(PajeStateEvent event) throws Exception{
 		//check if correct: assuming 0, 1 , 2 ...
 		newState.setImbrication(this.stackStates.size());
 		
-		this.entities.get(type).add(newState);
+		this.getEntities().get(type).add(newState);
 		this.stackStates.get(type).add(newState);
 		
 	}
@@ -215,8 +219,8 @@ private void pajePushState(PajeStateEvent event) throws Exception{
 		checkTimeOrder(event);
 		
 		//get last push from that type
-		if(!this.entities.isEmpty() && this.entities.containsKey(type)){
-				((PajeDoubleTimedEntity) this.entities.get(type).get(this.entities.get(type).size()-1)).setEndTime(time);
+		if(!this.getEntities().isEmpty() && this.getEntities().containsKey(type)){
+				((PajeDoubleTimedEntity) this.getEntities().get(type).get(this.getEntities().get(type).size()-1)).setEndTime(time);
 				//TODO actually remove
 		}else{
 			throw new Exception("Trying to Pop a State of type "+ type.getAlias() + " that was not previously Pushed in line " + traceEvent.getLine());
@@ -240,9 +244,9 @@ private void pajePushState(PajeStateEvent event) throws Exception{
 		PajeUserEvent newEvent = new PajeUserEvent(this, type, time, value, traceEvent);
 		
 		//check if the type for the event exists in container
-		if(this.entities.isEmpty() || !this.entities.containsKey(type))
-			this.entities.put(type, new ArrayList<PajeEntity>());
-		this.entities.get(type).add(newEvent);
+		if(this.getEntities().isEmpty() || !this.getEntities().containsKey(type))
+			this.getEntities().put(type, new ArrayList<PajeEntity>());
+		this.getEntities().get(type).add(newEvent);
 		
 	}
 	
@@ -254,12 +258,12 @@ private void pajePushState(PajeStateEvent event) throws Exception{
 		
 		checkTimeOrder(event);
 		
-		if(!this.entities.containsKey(type))
-			this.entities.put(type, new ArrayList<PajeEntity>());
+		if(!this.getEntities().containsKey(type))
+			this.getEntities().put(type, new ArrayList<PajeEntity>());
 		
 		//if same timestamp, just replaces value
-		if(!this.entities.get(type).isEmpty()){
-			PajeEntity last = this.entities.get(type).get(this.entities.get(type).size() -1);
+		if(!this.getEntities().get(type).isEmpty()){
+			PajeEntity last = this.getEntities().get(type).get(this.getEntities().get(type).size() -1);
 	
 			if(((PajeUserVariable) last).getStartTime() == time){
 				((PajeUserVariable) last).setValue(value);
@@ -270,7 +274,7 @@ private void pajePushState(PajeStateEvent event) throws Exception{
 		}
 		
 		PajeUserVariable newValue = new PajeUserVariable(this, type, time, value, traceEvent);		
-		this.entities.get(type).add(newValue);	
+		this.getEntities().get(type).add(newValue);	
 	}
 	
 	private void pajeAddVariable(PajeVariableEvent event) throws Exception{
@@ -280,12 +284,12 @@ private void pajePushState(PajeStateEvent event) throws Exception{
 		PajeTraceEvent traceEvent = event.getEvent();
 		double lastVal = 0;
 			
-		if(!this.entities.containsKey(type) || this.entities.get(type).isEmpty())
+		if(!this.getEntities().containsKey(type) || this.getEntities().get(type).isEmpty())
 			throw new Exception("Illegal addition to a variable that has no value (yet) in "+ traceEvent.getLine());
 		
 		checkTimeOrder(event);
 		
-		PajeEntity last = this.entities.get(type).get(this.entities.get(type).size() -1);
+		PajeEntity last = this.getEntities().get(type).get(this.getEntities().get(type).size() -1);
 		if(((PajeUserVariable) last).getStartTime() == time){
 			((PajeUserVariable) last).addValue(value);
 			return;				
@@ -297,7 +301,7 @@ private void pajePushState(PajeStateEvent event) throws Exception{
 		
 		//add variable with new value
 		PajeUserVariable newValue = new PajeUserVariable(this, type, time, lastVal + value, traceEvent);		
-		this.entities.get(type).add(newValue);
+		this.getEntities().get(type).add(newValue);
 	}
 	
 	private void pajeSubVariable(PajeVariableEvent event) throws Exception {
@@ -307,12 +311,12 @@ private void pajePushState(PajeStateEvent event) throws Exception{
 		PajeTraceEvent traceEvent = event.getEvent();
 		double lastVal = 0;
 			
-		if(!this.entities.containsKey(type) || this.entities.get(type).isEmpty())
+		if(!this.getEntities().containsKey(type) || this.getEntities().get(type).isEmpty())
 			throw new Exception("Illegal addition to a variable that has no value (yet) in "+ traceEvent.getLine());
 		
 		checkTimeOrder(event);
 		
-		PajeEntity last = this.entities.get(type).get(this.entities.get(type).size() -1);
+		PajeEntity last = this.getEntities().get(type).get(this.getEntities().get(type).size() -1);
 		if(((PajeUserVariable) last).getStartTime() == time){
 			((PajeUserVariable) last).subValue(value);
 			return;				
@@ -324,7 +328,7 @@ private void pajePushState(PajeStateEvent event) throws Exception{
 		
 		//add variable with new value
 		PajeUserVariable newValue = new PajeUserVariable(this, type, time, lastVal + value, traceEvent);		
-		this.entities.get(type).add(newValue);
+		this.getEntities().get(type).add(newValue);
 	}
 	
 	public void pajeStartLink(PajeLinkEvent event) throws Exception{
@@ -357,10 +361,10 @@ private void pajePushState(PajeStateEvent event) throws Exception{
 			
 			checkTimeOrder(event);
 			
-			if(!this.entities.containsKey(type))
-				this.entities.put(type, new ArrayList<PajeEntity>());
+			if(!this.getEntities().containsKey(type))
+				this.getEntities().put(type, new ArrayList<PajeEntity>());
 			
-			this.entities.get(type).add(link);
+			this.getEntities().get(type).add(link);
 			
 			pendingLinks.get(type).remove(key);
 			if(!linksUsedKeys.containsKey(type))
@@ -401,10 +405,10 @@ private void pajePushState(PajeStateEvent event) throws Exception{
 			
 			checkTimeOrder(event);
 			
-			if(!this.entities.containsKey(type))
-				this.entities.put(type, new ArrayList<PajeEntity>());
+			if(!this.getEntities().containsKey(type))
+				this.getEntities().put(type, new ArrayList<PajeEntity>());
 			
-			this.entities.get(type).add(link);
+			this.getEntities().get(type).add(link);
 			
 			pendingLinks.get(type).remove(key);
 			if(!linksUsedKeys.containsKey(type))
@@ -420,9 +424,9 @@ private void pajePushState(PajeStateEvent event) throws Exception{
 		double time = event.getTime();
 		PajeTraceEvent traceEvent = event.getEvent();
 		
-		 if(!this.entities.isEmpty()){
-			 if(this.entities.containsKey(event.getType())){
-				 ArrayList<PajeEntity> v = this.entities.get(event.getType());
+		 if(!this.getEntities().isEmpty()){
+			 if(this.getEntities().containsKey(event.getType())){
+				 ArrayList<PajeEntity> v = this.getEntities().get(event.getType());
 				if(!v.isEmpty()){
 					PajeSingleTimedEntity last = (PajeSingleTimedEntity) v.get(v.size()-1);
 					if((last.getStartTime() > time) || last.getEndTime() != -1 && last.getEndTime() > time){
@@ -446,5 +450,10 @@ private void pajePushState(PajeStateEvent event) throws Exception{
 			}
 		}
 	}
+
+	public Map<PajeType, ArrayList<PajeEntity>> getEntities() {
+		return entities;
+	}
+
 
 }
