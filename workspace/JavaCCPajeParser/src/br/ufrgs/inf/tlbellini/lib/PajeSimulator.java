@@ -92,7 +92,7 @@ public class PajeSimulator extends PajeComponent {
 					+ ", "
 					+ (container.getEndTime() - container.getStartTime())
 					+ ", " + container.getName());
-
+			/*
 			for (ArrayList<PajeEntity> entities : container.getEntities()
 					.values()) {
 				for (PajeEntity ent : entities) {
@@ -171,7 +171,7 @@ public class PajeSimulator extends PajeComponent {
 					}
 				}
 
-			}
+			} */
 
 		}
 
@@ -574,7 +574,7 @@ public class PajeSimulator extends PajeComponent {
 		PajeContainer newContainer = new PajeContainer(lastKnownTime, name,
 				alias, parentContainer, pajeType, event);
 		contMap.put(identifier, newContainer);
-		contMap.put(name, newContainer);
+		contNamesMap.put(name, newContainer);
 
 		parentContainer.addChildren(identifier, newContainer);
 
