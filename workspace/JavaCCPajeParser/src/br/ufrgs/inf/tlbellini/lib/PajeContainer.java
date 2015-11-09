@@ -150,7 +150,7 @@ public class PajeContainer extends PajeNamedEntity {
 		
 		//check pending links
 		if(!this.pendingLinks.isEmpty())
-			throw new Exception("Can't destroy container " + this.alias + " because it has pending links");
+			//throw new Exception("Can't destroy container " + this.alias + " because it has pending links");
 		
 		//end stack 
 		for(Map.Entry<PajeType, ArrayList<PajeUserState>> entry : this.stackStates.entrySet()){
@@ -448,6 +448,15 @@ private void pajePushState(PajeStateEvent event) throws Exception{
 					// TODO clear stack and save db
 				}
 			}
+		}
+	}
+	
+	public void recursiveDestroy(double time) throws Exception{
+		if(!this.destroyed){
+			this.destroy(time);
+		}
+		for(Map.Entry<String, PajeContainer> child : this.children.entrySet()){
+			child.getValue().recursiveDestroy(time);
 		}
 	}
 

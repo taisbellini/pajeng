@@ -19,8 +19,6 @@ public class PajeSimulator extends PajeComponent {
 
 	// private double stopSimulationAtTime;
 
-	private double selectionStart;
-	private double selectionEnd;
 
 	protected double lastKnownTime;
 
@@ -75,6 +73,10 @@ public class PajeSimulator extends PajeComponent {
 		}
 		return ret;
 	}
+	
+	public void finish() throws Exception{
+		this.root.recursiveDestroy(this.lastKnownTime);
+	}
 
 	public void report() {
 
@@ -113,9 +115,14 @@ public class PajeSimulator extends PajeComponent {
 										+ (((PajeDoubleTimedEntity) ent)
 												.getEndTime() - ((PajeSingleTimedEntity) ent)
 												.getStartTime()) + ", "
-										+ ((PajeUserVariable) ent).getValue());
+										+ ((PajeUserVariable) ent).getValue() );
 						break;
 					case StateType:
+						String val = null;
+						if(((PajeValueEntity) ent).getValue() != null){
+							val = ((PajeValueEntity) ent).getValue().getName();
+						}
+						
 						System.out
 								.println("State, "
 										+ ent.getContainer().getName()
@@ -133,7 +140,8 @@ public class PajeSimulator extends PajeComponent {
 										+ ", "
 										+ ((PajeUserState) ent)
 												.getImbrication() + ", "
-										+ ((PajeValueEntity) ent).getValue());
+										+ val
+												);
 						break;
 					case EventType:
 						System.out.println("Event, "
@@ -157,7 +165,7 @@ public class PajeSimulator extends PajeComponent {
 												.getEndTime() - ((PajeSingleTimedEntity) ent)
 												.getStartTime())
 										+ ", "
-										+ ((PajeValueEntity) ent).getValue()
+										+ ((PajeValueEntity) ent).getValue().getName()
 										+ ", "
 										+ ((PajeUserLink) ent)
 												.getStartContainer().getName()
