@@ -322,7 +322,7 @@ private void pajePushState(PajeStateEvent event) throws Exception{
 		lastVal = ((PajeUserVariable) last).getValue();
 		
 		//add variable with new value
-		PajeUserVariable newValue = new PajeUserVariable(this, type, time, lastVal + value, traceEvent);		
+		PajeUserVariable newValue = new PajeUserVariable(this, type, time, lastVal - value, traceEvent);		
 		this.getEntities().get(type).add(newValue);
 	}
 	

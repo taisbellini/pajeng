@@ -6,6 +6,7 @@ public class PajeUserVariable extends PajeDoubleTimedEntity {
 
 	public PajeUserVariable(PajeContainer container, PajeType type, double time, double value, PajeTraceEvent event) {
 		super(container, type, time, event);
+		this.setValue(value);
 	}
 
 	public double getValue() {

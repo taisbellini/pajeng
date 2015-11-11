@@ -110,7 +110,8 @@ public class PajeSimulator extends PajeComponent {
 										+ ((PajeSingleTimedEntity) ent)
 												.getStartTime()
 										+ ", "
-										+ container.getEndTime()
+										+ ((PajeSingleTimedEntity) ent)
+												.getEndTime()
 										+ ", "
 										+ (((PajeDoubleTimedEntity) ent)
 												.getEndTime() - ((PajeSingleTimedEntity) ent)
