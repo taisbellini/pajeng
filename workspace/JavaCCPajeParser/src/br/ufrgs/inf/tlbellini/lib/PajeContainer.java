@@ -79,15 +79,6 @@ public class PajeContainer extends PajeNamedEntity {
 		if(this.destroyed){
 			return;
 		}
-		/*double lastKnownTime = event.getTime();
-		 
-		 * deciding if necessary
-		if(this.stopSimulationAt != -1){
-			if(lastKnownTime > this.stopSimulationAt){
-				pajeDestroyContainer(stopSimulationAt, event);
-				return;
-			}
-		}*/
 		
 		//call the method to be simulated
 		PajeEventId eventId = event.getEvent().getPajeEventDef().getPajeEventId();
@@ -149,8 +140,13 @@ public class PajeContainer extends PajeNamedEntity {
 		}
 		
 		//check pending links
-		if(!this.pendingLinks.isEmpty())
-			//throw new Exception("Can't destroy container " + this.alias + " because it has pending links");
+		for(Map.Entry<PajeType, Map<String, PajeUserLink>> links : this.pendingLinks.entrySet()){
+			if(!links.getValue().isEmpty())
+				throw new Exception("Can't destroy container " + this.alias + " because it has pending links");
+			
+		}
+		
+			
 		
 		//end stack 
 		for(Map.Entry<PajeType, ArrayList<PajeUserState>> entry : this.stackStates.entrySet()){
@@ -160,7 +156,7 @@ public class PajeContainer extends PajeNamedEntity {
 			}
 		}
 		
-		//destroy recursively?
+		this.recursiveDestroy(time);
 		
 		
 	}
@@ -396,7 +392,7 @@ private void pajePushState(PajeStateEvent event) throws Exception{
 		}else{
 			//there is a PajeStartLink
 			PajeUserLink link = pendingLinks.get(type).get(key);
-			link.setStartTime(time);
+			link.setEndTime(time);
 			link.setEndContainer(endContainer);
 			
 			//check the consistency between end and start links
