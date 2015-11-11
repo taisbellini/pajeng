@@ -1,0 +1,23 @@
+How to compile poti examples? Follow the receipt:
+
+1 - Install POTI
+How to install poti?
+
+$ git clone git://github.com/schnorr/poti.git
+$ cd poti
+$ mkdir build
+$ cd build
+$ cmake -DCMAKE_INSTALL_PREFIX=/home/schnorr/install/poti/ ..
+$ make
+
+You can also use ccmake to configure this.
+
+2 - Compiling the examples
+
+Supposing you have installed poti at /home/schnorr/install/poti, compile this way:
+gcc -L/home/schnorr/install/poti/lib/ -I/home/schnorr/install/poti/include events.c -lpoti
+
+3 - Run the examples
+
+export LD_LIBRARY_PATH=/home/schnorr/install/poti
+./a.out
