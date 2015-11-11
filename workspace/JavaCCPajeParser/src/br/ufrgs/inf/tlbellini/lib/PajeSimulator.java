@@ -118,11 +118,6 @@ public class PajeSimulator extends PajeComponent {
 										+ ((PajeUserVariable) ent).getValue() );
 						break;
 					case StateType:
-						String val = null;
-						if(((PajeValueEntity) ent).getValue() != null){
-							val = ((PajeValueEntity) ent).getValue().getName();
-						}
-						
 						System.out
 								.println("State, "
 										+ ent.getContainer().getName()
@@ -132,7 +127,8 @@ public class PajeSimulator extends PajeComponent {
 										+ ((PajeSingleTimedEntity) ent)
 												.getStartTime()
 										+ ", "
-										+ container.getEndTime()
+										+ ((PajeSingleTimedEntity) ent)
+												.getEndTime()
 										+ ", "
 										+ (((PajeDoubleTimedEntity) ent)
 												.getEndTime() - ((PajeSingleTimedEntity) ent)
@@ -140,7 +136,7 @@ public class PajeSimulator extends PajeComponent {
 										+ ", "
 										+ ((PajeUserState) ent)
 												.getImbrication() + ", "
-										+ val
+										+ ((PajeValueEntity) ent).getValue().getName()
 												);
 						break;
 					case EventType:
@@ -714,6 +710,7 @@ public class PajeSimulator extends PajeComponent {
 		PajeValue pajeValue = null;
 		if (!pajeType.hasValueForIdentifier(value)) {
 			pajeType.addValue(value, value, null);
+			pajeValue = pajeType.valueForIdentifier(value);
 			// throw new Exception
 			// ("There is no existing value to be saved in line " + line);
 		} else {

@@ -145,14 +145,13 @@ public class PajeContainer extends PajeNamedEntity {
 				throw new Exception("Can't destroy container " + this.alias + " because it has pending links");
 			
 		}
-		
-			
-		
+				
 		//end stack 
 		for(Map.Entry<PajeType, ArrayList<PajeUserState>> entry : this.stackStates.entrySet()){
 			for(PajeEntity ent : entry.getValue()){
 				//TODO salvar no bd e remover
-				((PajeDoubleTimedEntity) ent).setEndTime(time);
+				if(((PajeDoubleTimedEntity) ent).getEndTime() == -1) 
+					((PajeDoubleTimedEntity) ent).setEndTime(time);
 			}
 		}
 		
