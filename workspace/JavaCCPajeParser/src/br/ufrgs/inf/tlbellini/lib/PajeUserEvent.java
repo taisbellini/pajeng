@@ -6,6 +6,7 @@ public class PajeUserEvent extends PajeSingleTimedEntity {
 
 	public PajeUserEvent(PajeContainer container, PajeType type, double time, PajeValue value, PajeTraceEvent event) {
 		super(container, type, time, event);
+		this.setValue(value);
 	}
 
 	public PajeValue getValue() {

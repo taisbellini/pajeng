@@ -145,7 +145,8 @@ public class PajeSimulator extends PajeComponent {
 								+ ent.getContainer().getName() + ", "
 								+ ent.getType().getName() + ", "
 								+ ((PajeSingleTimedEntity) ent).getStartTime()
-								+ ", " + ((PajeValueEntity) ent).getValue());
+								+ ", " + ((PajeUserEvent) ent).getValue().getName());
+						break;
 					case LinkType:
 						System.out
 								.println("Link, "

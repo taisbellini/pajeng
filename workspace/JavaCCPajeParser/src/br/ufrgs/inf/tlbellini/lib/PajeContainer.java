@@ -135,7 +135,8 @@ public class PajeContainer extends PajeNamedEntity {
 		//finish all entities - set end time in last entity of array
 		for(Map.Entry<PajeType, ArrayList<PajeEntity>> entry : this.getEntities().entrySet()){
 			ArrayList<PajeEntity> list = entry.getValue();
-			if(((PajeDoubleTimedEntity) list.get(list.size()-1)).getEndTime() == -1)
+			//if event, no need to set end time
+			if((list.get(list.size()-1).getType().getNature() != PajeTypeNature.EventType) && ((PajeDoubleTimedEntity) list.get(list.size()-1)).getEndTime() == -1)
 				((PajeDoubleTimedEntity) list.get(list.size()-1)).setEndTime(time);
 		}
 		
