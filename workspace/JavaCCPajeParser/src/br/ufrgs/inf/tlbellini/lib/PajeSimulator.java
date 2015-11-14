@@ -495,12 +495,12 @@ public class PajeSimulator extends PajeComponent {
 		}
 
 		// validates color if exists
-		PajeColor pajeColor;
+		PajeColor pajeColor = null;
 		if (!color.isEmpty()) {
 			pajeColor = getColor(color, event);
 		}
 
-		pajeColor = null;
+		//pajeColor = null;
 
 		// check if type is an acceptable type
 		if (targetType.getNature().equals(PajeTypeNature.ContainerType))

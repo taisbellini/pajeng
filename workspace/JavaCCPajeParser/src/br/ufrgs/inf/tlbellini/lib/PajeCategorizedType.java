@@ -24,8 +24,8 @@ public class PajeCategorizedType extends PajeType {
 		return colors;
 	}
 
-	public void addValue(String alias, String value, PajeColor color){
-		PajeValue newValue = new PajeValue(value, alias, this, color); 
+	public void addValue(String name, String alias, PajeColor color){
+		PajeValue newValue = new PajeValue(name, alias, this, color); 
 		this.getValues().put(newValue.getId(), newValue);
 		this.getColors().put(newValue.getId(), color);
 	}
