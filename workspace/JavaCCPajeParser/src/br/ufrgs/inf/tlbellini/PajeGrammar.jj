@@ -11,6 +11,7 @@ public class PajeGrammar{
 
   public static ArrayList<PajeEventDefinition> eventDefinitions = new ArrayList<PajeEventDefinition>(); 
   static PajeSimulator simulator = new PajeSimulator();
+  static public DBClass db = new DBClass();
 
 
   public static void main(String args []) throws ParseException, FileNotFoundException  {
@@ -22,7 +23,8 @@ public class PajeGrammar{
       System.out.println("Input the file path: ");
       input = new FileInputStream(sc.nextLine());    }
     long startTime = System.currentTimeMillis();
-    simulator.init();    PajeGrammar parser = new PajeGrammar(input);
+    simulator.init();
+    db.connectDB();    PajeGrammar parser = new PajeGrammar(input);
                 try      {        switch (parser.paje())        {          case 4 :  
           simulator.finish();
           simulator.report();          long endTime = System.currentTimeMillis();

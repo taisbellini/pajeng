@@ -75,6 +75,8 @@ public class PajeContainer extends PajeNamedEntity {
 	/* NECESSARY??? To make the methods private */
 	public void demuxer(PajeEvent event) throws Exception{
 		
+		// CHECK WITH END TIME OF CONTAINER IF IS A DESTROY
+		
 		//if Container destroyed, can't do anything (maybe an exception??)
 		if(this.destroyed){
 			return;

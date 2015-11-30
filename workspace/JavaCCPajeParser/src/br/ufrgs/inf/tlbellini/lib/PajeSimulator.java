@@ -22,12 +22,6 @@ public class PajeSimulator extends PajeComponent {
 
 	protected double lastKnownTime;
 
-	/*
-	 * public PajeSimulator(){ this.stopSimulationAtTime = -1; }
-	 * 
-	 * public PajeSimulator(double stopAt){ this.stopSimulationAtTime = stopAt;
-	 * }
-	 */
 
 	public void init() {
 		// name, alias, parent
@@ -110,7 +104,7 @@ public class PajeSimulator extends PajeComponent {
 										+ ((PajeSingleTimedEntity) ent)
 												.getStartTime()
 										+ ", "
-										+ ((PajeSingleTimedEntity) ent)
+										+ ((PajeDoubleTimedEntity) ent)
 												.getEndTime()
 										+ ", "
 										+ (((PajeDoubleTimedEntity) ent)
@@ -380,12 +374,11 @@ public class PajeSimulator extends PajeComponent {
 					+ line + "does not exist");
 		}
 
-		PajeColor pajeColor;
+		PajeColor pajeColor = null;
 		if (!color.isEmpty()) {
 			pajeColor = getColor(color, event);
 		}
 
-		pajeColor = null;
 
 		String identifier = alias.isEmpty() ? name : alias;
 		PajeVariableType newType;
@@ -500,7 +493,6 @@ public class PajeSimulator extends PajeComponent {
 			pajeColor = getColor(color, event);
 		}
 
-		//pajeColor = null;
 
 		// check if type is an acceptable type
 		if (targetType.getNature().equals(PajeTypeNature.ContainerType))
