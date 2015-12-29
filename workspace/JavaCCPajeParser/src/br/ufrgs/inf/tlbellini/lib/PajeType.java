@@ -1,5 +1,7 @@
 package br.ufrgs.inf.tlbellini.lib;
 
+import br.ufrgs.inf.tlbellini.PajeGrammar;
+
 public class PajeType extends PajeObject {
 	
 	protected String name;
@@ -16,6 +18,11 @@ public class PajeType extends PajeObject {
 			this.depth = 0;
 		}
 		this.parent = parent;
+		
+		String parent_alias = parent != null? parent.getAlias() : "null";
+		
+		String sql = PajeGrammar.db.generateInsertTypeSQL(alias, name, parent_alias, depth);
+		PajeGrammar.db.insert(sql);
 	}
 
 	public String getName() {

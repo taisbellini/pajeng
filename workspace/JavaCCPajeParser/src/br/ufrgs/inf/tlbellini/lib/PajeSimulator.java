@@ -6,6 +6,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import br.ufrgs.inf.tlbellini.PajeGrammar;
+
 public class PajeSimulator extends PajeComponent {
 
 	private PajeContainerType rootType;
@@ -16,6 +18,7 @@ public class PajeSimulator extends PajeComponent {
 	private Map<String, PajeType> typeNamesMap = new HashMap<String, PajeType>();;
 	private Map<String, PajeContainer> contMap = new HashMap<String, PajeContainer>();
 	private Map<String, PajeContainer> contNamesMap = new HashMap<String, PajeContainer>();
+	
 
 	// private double stopSimulationAtTime;
 
@@ -33,6 +36,11 @@ public class PajeSimulator extends PajeComponent {
 		typeNamesMap.put(rootType.getName(), rootType);
 		contMap.put(root.getId(), root);
 		contNamesMap.put(root.getName(), root);
+		
+		//database
+		PajeGrammar.db.connectDB();
+	    System.out.println(PajeGrammar.db.status());
+	    
 	}
 
 	protected void setLastKnownTime(PajeTraceEvent event) {

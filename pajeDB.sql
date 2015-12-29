@@ -21,8 +21,7 @@ CREATE TABLE IF NOT EXISTS `paje`.`type` (
   `alias` VARCHAR(20) NOT NULL,
   `name` VARCHAR(50) NOT NULL,
   `depth` INT NULL,
-  `parent_type_alias` VARCHAR(20) NOT NULL,
-  `type_name` VARCHAR(15) NULL,
+  `parent_type_alias` VARCHAR(20) NULL,
   PRIMARY KEY (`alias`),
   INDEX `fk_type_type1_idx` (`parent_type_alias` ASC),
   CONSTRAINT `fk_type_type1`
@@ -40,7 +39,7 @@ CREATE TABLE IF NOT EXISTS `paje`.`container` (
   `name` VARCHAR(20) NOT NULL,
   `startTime` INT NULL,
   `endTime` INT NULL,
-  `parent_container_alias` VARCHAR(20) NOT NULL,
+  `parent_container_alias` VARCHAR(20) NULL,
   `type_alias` VARCHAR(20) NOT NULL,
   PRIMARY KEY (`alias`),
   INDEX `fk_container_container_idx` (`parent_container_alias` ASC),
@@ -64,7 +63,14 @@ CREATE TABLE IF NOT EXISTS `paje`.`value` (
   `alias` VARCHAR(20) NOT NULL,
   `name` VARCHAR(50) NOT NULL,
   `color` VARCHAR(15) NULL,
-  PRIMARY KEY (`alias`));
+  `type_alias` VARCHAR(20) NOT NULL,
+  PRIMARY KEY (`alias`, `type_alias`),
+  INDEX `fk_value_type1_idx` (`type_alias` ASC),
+  CONSTRAINT `fk_value_type1`
+    FOREIGN KEY (`type_alias`)
+    REFERENCES `paje`.`type` (`alias`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION);
 
 
 -- -----------------------------------------------------

@@ -1,5 +1,7 @@
 package br.ufrgs.inf.tlbellini.lib;
 
+import br.ufrgs.inf.tlbellini.PajeGrammar;
+
 public class PajeValue extends PajeObject {
 	
 	private PajeColor color;
@@ -12,6 +14,9 @@ public class PajeValue extends PajeObject {
 		this.setName(name);
 		this.setAlias(alias);
 		this.setType(type);
+		
+		String sql = PajeGrammar.db.generateInsertValueSQL(alias, name, type.getAlias());
+		PajeGrammar.db.insert(sql);
 	}
 
 	public PajeColor getColor() {
