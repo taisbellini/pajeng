@@ -19,10 +19,6 @@ public class PajeType extends PajeObject {
 		}
 		this.parent = parent;
 		
-		String parent_alias = parent != null? parent.getAlias() : "null";
-		
-		String sql = PajeGrammar.db.generateInsertTypeSQL(alias, name, parent_alias, depth);
-		PajeGrammar.db.insert(sql);
 	}
 
 	public String getName() {

@@ -15,6 +15,17 @@ CREATE SCHEMA IF NOT EXISTS `paje` DEFAULT CHARACTER SET utf8 ;
 USE `paje` ;
 
 -- -----------------------------------------------------
+-- Table `paje`.`file`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `paje`.`file` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(50) NOT NULL,
+  `comment` VARCHAR(500) NULL,
+  `date` DATETIME NULL,
+  PRIMARY KEY (`id`));
+
+
+-- -----------------------------------------------------
 -- Table `paje`.`type`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `paje`.`type` (
@@ -22,11 +33,18 @@ CREATE TABLE IF NOT EXISTS `paje`.`type` (
   `name` VARCHAR(50) NOT NULL,
   `depth` INT NULL,
   `parent_type_alias` VARCHAR(20) NULL,
-  PRIMARY KEY (`alias`),
+  `file_id` INT NOT NULL,
+  PRIMARY KEY (`alias`, `file_id`),
   INDEX `fk_type_type1_idx` (`parent_type_alias` ASC),
+  INDEX `fk_type_file1_idx` (`file_id` ASC),
   CONSTRAINT `fk_type_type1`
     FOREIGN KEY (`parent_type_alias`)
     REFERENCES `paje`.`type` (`alias`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_type_file1`
+    FOREIGN KEY (`file_id`)
+    REFERENCES `paje`.`file` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION);
 
@@ -37,11 +55,11 @@ CREATE TABLE IF NOT EXISTS `paje`.`type` (
 CREATE TABLE IF NOT EXISTS `paje`.`container` (
   `alias` VARCHAR(20) NOT NULL,
   `name` VARCHAR(20) NOT NULL,
-  `startTime` INT NULL,
-  `endTime` INT NULL,
+  `startTime` DOUBLE NULL,
+  `endTime` DOUBLE NULL,
   `parent_container_alias` VARCHAR(20) NULL,
   `type_alias` VARCHAR(20) NOT NULL,
-  PRIMARY KEY (`alias`),
+  PRIMARY KEY (`alias`, `type_alias`),
   INDEX `fk_container_container_idx` (`parent_container_alias` ASC),
   INDEX `fk_container_type1_idx` (`type_alias` ASC),
   CONSTRAINT `fk_container_container`
@@ -106,10 +124,11 @@ CREATE TABLE IF NOT EXISTS `paje`.`event` (
 -- Table `paje`.`variable`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `paje`.`variable` (
-  `time` INT NOT NULL,
-  `value` INT NOT NULL,
+  `time` DOUBLE NOT NULL,
+  `value` DOUBLE NOT NULL,
   `container_alias` VARCHAR(20) NOT NULL,
   `type_alias` VARCHAR(20) NOT NULL,
+  `update_time` DOUBLE NULL,
   PRIMARY KEY (`time`, `container_alias`, `type_alias`),
   INDEX `fk_variable_container1_idx` (`container_alias` ASC),
   INDEX `fk_variable_type1_idx` (`type_alias` ASC),

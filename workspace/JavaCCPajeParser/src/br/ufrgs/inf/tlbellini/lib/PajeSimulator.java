@@ -1,5 +1,6 @@
 package br.ufrgs.inf.tlbellini.lib;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,16 +20,14 @@ public class PajeSimulator extends PajeComponent {
 	private Map<String, PajeContainer> contMap = new HashMap<String, PajeContainer>();
 	private Map<String, PajeContainer> contNamesMap = new HashMap<String, PajeContainer>();
 	
-
-	// private double stopSimulationAtTime;
-
-
 	protected double lastKnownTime;
+	
+	public int fileId; 
 
 
 	public void init() {
 		// name, alias, parent
-		this.rootType = new PajeContainerType("0", "0", null);
+		this.rootType = new PajeContainerType("0","0", null);
 
 		// time, name, alias, parent, type, event
 		this.root = new PajeContainer(0.0, "0", "0", null, rootType, null);
@@ -37,9 +36,6 @@ public class PajeSimulator extends PajeComponent {
 		contMap.put(root.getId(), root);
 		contNamesMap.put(root.getName(), root);
 		
-		//database
-		PajeGrammar.db.connectDB();
-	    System.out.println(PajeGrammar.db.status());
 	    
 	}
 

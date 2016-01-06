@@ -5,12 +5,17 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import br.ufrgs.inf.tlbellini.PajeGrammar;
+
 public class PajeContainerType extends PajeType {
 
 	private Map<String, PajeType> children = new HashMap<String, PajeType>();
 	
 	public PajeContainerType(String name, String alias, PajeType parent) {
 		super(name, alias, parent);
+		
+		String sql = PajeGrammar.db.generateInsertTypeSQL(alias, name, parent != null? parent.alias : "null" , depth, PajeGrammar.fileId);
+		PajeGrammar.db.insert(sql);
 	}
 
 	public Map<String, PajeType> getChildren() {

@@ -2,6 +2,7 @@ package br.ufrgs.inf.tlbellini.lib;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
@@ -70,7 +71,13 @@ public class DBClass {
 		}
 		
 	}
-
+	
+	public String generateInsertFileSQL(String filename, String comment, String date){
+		return "INSERT INTO file (name, comment, date) " + "VALUES ( " + toString(filename)  + " , " + toString(comment) + ", " + 
+				toString(date) + ")";
+	}
+	
+	
 	public String generateInsertStateSQL(double start, double end, String type_alias, String value_alias,
 			String container_alias) {
 		return "INSERT INTO state (startTime, endTime, type_alias, value_alias, container_alias) " + "VALUES (" + start
@@ -84,9 +91,9 @@ public class DBClass {
 		
 	}
 
-	public String generateInsertTypeSQL(String alias, String name, String parent, int depth) {
-		return "INSERT INTO type (alias, name, parent_type_alias, depth) " + "VALUES ( " + toString(alias)  + " , " + toString(name) + ", " + 
-				toString(parent) + ", " + depth + ")";
+	public String generateInsertTypeSQL(String alias, String name, String parent, int depth, int fileId) {
+		return "INSERT INTO type (alias, name, parent_type_alias, depth, file_id) " + "VALUES ( " + toString(alias)  + " , " + toString(name) + ", " + 
+				toString(parent) + ", " + depth + ", " + fileId + ")";
 		
 	}
 
@@ -96,13 +103,24 @@ public class DBClass {
 		
 	}
 	
+	public int getFileId(String filename) throws SQLException{
+		java.sql.Statement stmt = conn.createStatement();
+		String sql = "SELECT id FROM file WHERE name = " + toString(filename);
+		ResultSet rs = stmt.executeQuery(sql);
+		rs.next();
+		return rs.getInt("id");
+		
+	}
+	
 	//getting SQL Exception when string is not double quoted
 	public String toString(String str){
-		if(str.startsWith("\"") || str =="null")
+		if(str.startsWith("\"") || str == "null")
 			return str;
 		else
 			return "\"" + str + "\"";
 		
 	}
+
+	
 
 }
