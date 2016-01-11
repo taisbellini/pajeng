@@ -34,9 +34,14 @@ CREATE TABLE IF NOT EXISTS `paje`.`type` (
   `depth` INT NULL,
   `parent_type_alias` VARCHAR(20) NULL,
   `file_id` INT NOT NULL,
+  `start_link_type` VARCHAR(20) NOT NULL,
+  `end_link_type` VARCHAR(20) NOT NULL,
+  `color` VARCHAR(25) NULL,
   PRIMARY KEY (`alias`, `file_id`),
   INDEX `fk_type_type1_idx` (`parent_type_alias` ASC),
   INDEX `fk_type_file1_idx` (`file_id` ASC),
+  INDEX `fk_type_type2_idx` (`start_link_type` ASC),
+  INDEX `fk_type_type3_idx` (`end_link_type` ASC),
   CONSTRAINT `fk_type_type1`
     FOREIGN KEY (`parent_type_alias`)
     REFERENCES `paje`.`type` (`alias`)
@@ -45,6 +50,16 @@ CREATE TABLE IF NOT EXISTS `paje`.`type` (
   CONSTRAINT `fk_type_file1`
     FOREIGN KEY (`file_id`)
     REFERENCES `paje`.`file` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_type_type2`
+    FOREIGN KEY (`start_link_type`)
+    REFERENCES `paje`.`type` (`alias`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_type_type3`
+    FOREIGN KEY (`end_link_type`)
+    REFERENCES `paje`.`type` (`alias`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION);
 
@@ -59,9 +74,11 @@ CREATE TABLE IF NOT EXISTS `paje`.`container` (
   `endTime` DOUBLE NULL,
   `parent_container_alias` VARCHAR(20) NULL,
   `type_alias` VARCHAR(20) NOT NULL,
-  PRIMARY KEY (`alias`, `type_alias`),
+  `file_id` INT NOT NULL,
+  PRIMARY KEY (`alias`, `file_id`),
   INDEX `fk_container_container_idx` (`parent_container_alias` ASC),
   INDEX `fk_container_type1_idx` (`type_alias` ASC),
+  INDEX `fk_container_file1_idx` (`file_id` ASC),
   CONSTRAINT `fk_container_container`
     FOREIGN KEY (`parent_container_alias`)
     REFERENCES `paje`.`container` (`alias`)
@@ -70,6 +87,11 @@ CREATE TABLE IF NOT EXISTS `paje`.`container` (
   CONSTRAINT `fk_container_type1`
     FOREIGN KEY (`type_alias`)
     REFERENCES `paje`.`type` (`alias`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_container_file1`
+    FOREIGN KEY (`file_id`)
+    REFERENCES `paje`.`file` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION);
 
@@ -82,11 +104,12 @@ CREATE TABLE IF NOT EXISTS `paje`.`value` (
   `name` VARCHAR(50) NOT NULL,
   `color` VARCHAR(15) NULL,
   `type_alias` VARCHAR(20) NOT NULL,
-  PRIMARY KEY (`alias`, `type_alias`),
-  INDEX `fk_value_type1_idx` (`type_alias` ASC),
+  `type_file_id` INT NOT NULL,
+  PRIMARY KEY (`alias`, `type_alias`, `type_file_id`),
+  INDEX `fk_value_type1_idx` (`type_alias` ASC, `type_file_id` ASC),
   CONSTRAINT `fk_value_type1`
-    FOREIGN KEY (`type_alias`)
-    REFERENCES `paje`.`type` (`alias`)
+    FOREIGN KEY (`type_alias` , `type_file_id`)
+    REFERENCES `paje`.`type` (`alias` , `file_id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION);
 
@@ -95,14 +118,19 @@ CREATE TABLE IF NOT EXISTS `paje`.`value` (
 -- Table `paje`.`event`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `paje`.`event` (
-  `time` INT NOT NULL,
+  `time` DOUBLE NOT NULL,
+  `type_alias` VARCHAR(20) NOT NULL,
+  `type_file_id` INT NOT NULL,
   `container_alias` VARCHAR(20) NOT NULL,
   `value_alias` VARCHAR(20) NOT NULL,
-  `type_alias` VARCHAR(20) NOT NULL,
-  PRIMARY KEY (`container_alias`, `value_alias`, `type_alias`),
+  PRIMARY KEY (`type_alias`, `type_file_id`, `container_alias`, `value_alias`),
   INDEX `fk_event_container1_idx` (`container_alias` ASC),
   INDEX `fk_event_value1_idx` (`value_alias` ASC),
-  INDEX `fk_event_type1_idx` (`type_alias` ASC),
+  CONSTRAINT `fk_event_type1`
+    FOREIGN KEY (`type_alias` , `type_file_id`)
+    REFERENCES `paje`.`type` (`alias` , `file_id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
   CONSTRAINT `fk_event_container1`
     FOREIGN KEY (`container_alias`)
     REFERENCES `paje`.`container` (`alias`)
@@ -112,11 +140,6 @@ CREATE TABLE IF NOT EXISTS `paje`.`event` (
     FOREIGN KEY (`value_alias`)
     REFERENCES `paje`.`value` (`alias`)
     ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_event_type1`
-    FOREIGN KEY (`type_alias`)
-    REFERENCES `paje`.`type` (`alias`)
-    ON DELETE NO ACTION
     ON UPDATE NO ACTION);
 
 
@@ -124,22 +147,23 @@ CREATE TABLE IF NOT EXISTS `paje`.`event` (
 -- Table `paje`.`variable`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `paje`.`variable` (
-  `time` DOUBLE NOT NULL,
+  `time` DOUBLE NULL,
   `value` DOUBLE NOT NULL,
-  `container_alias` VARCHAR(20) NOT NULL,
   `type_alias` VARCHAR(20) NOT NULL,
-  `update_time` DOUBLE NULL,
-  PRIMARY KEY (`time`, `container_alias`, `type_alias`),
-  INDEX `fk_variable_container1_idx` (`container_alias` ASC),
+  `update_time` DOUBLE NOT NULL,
+  `container_alias` VARCHAR(20) NOT NULL,
+  `container_file_id` INT NOT NULL,
+  PRIMARY KEY (`type_alias`, `update_time`, `container_alias`, `container_file_id`),
   INDEX `fk_variable_type1_idx` (`type_alias` ASC),
-  CONSTRAINT `fk_variable_container1`
-    FOREIGN KEY (`container_alias`)
-    REFERENCES `paje`.`container` (`alias`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
+  INDEX `fk_variable_container1_idx` (`container_alias` ASC, `container_file_id` ASC),
   CONSTRAINT `fk_variable_type1`
     FOREIGN KEY (`type_alias`)
     REFERENCES `paje`.`type` (`alias`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_variable_container1`
+    FOREIGN KEY (`container_alias` , `container_file_id`)
+    REFERENCES `paje`.`container` (`alias` , `file_id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION);
 
@@ -151,24 +175,57 @@ CREATE TABLE IF NOT EXISTS `paje`.`state` (
   `startTime` INT NOT NULL,
   `endTime` INT NOT NULL,
   `type_alias` VARCHAR(20) NOT NULL,
-  `value_alias` VARCHAR(20) NOT NULL,
   `container_alias` VARCHAR(20) NOT NULL,
-  PRIMARY KEY (`startTime`, `type_alias`, `value_alias`, `container_alias`),
+  `container_file_id` INT NOT NULL,
+  `value_alias` VARCHAR(20) NOT NULL,
+  PRIMARY KEY (`type_alias`, `container_alias`, `container_file_id`, `value_alias`),
   INDEX `fk_state_type1_idx` (`type_alias` ASC),
+  INDEX `fk_state_container1_idx` (`container_alias` ASC, `container_file_id` ASC),
   INDEX `fk_state_value1_idx` (`value_alias` ASC),
-  INDEX `fk_state_container1_idx` (`container_alias` ASC),
   CONSTRAINT `fk_state_type1`
     FOREIGN KEY (`type_alias`)
     REFERENCES `paje`.`type` (`alias`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_state_container1`
+    FOREIGN KEY (`container_alias` , `container_file_id`)
+    REFERENCES `paje`.`container` (`alias` , `file_id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `fk_state_value1`
     FOREIGN KEY (`value_alias`)
     REFERENCES `paje`.`value` (`alias`)
     ON DELETE NO ACTION
+    ON UPDATE NO ACTION);
+
+
+-- -----------------------------------------------------
+-- Table `paje`.`link`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `paje`.`link` (
+  `time` DOUBLE NULL,
+  `key` VARCHAR(50) NOT NULL,
+  `type_alias` VARCHAR(20) NOT NULL,
+  `type_file_id` INT NOT NULL,
+  `start_container_alias` VARCHAR(20) NOT NULL,
+  `end_container_alias` VARCHAR(20) NOT NULL,
+  PRIMARY KEY (`type_alias`, `type_file_id`, `key`, `start_container_alias`, `end_container_alias`),
+  UNIQUE INDEX `key_UNIQUE` (`key` ASC),
+  INDEX `fk_link_type1_idx` (`type_alias` ASC, `type_file_id` ASC),
+  INDEX `fk_link_container1_idx` (`start_container_alias` ASC),
+  INDEX `fk_link_container2_idx` (`end_container_alias` ASC),
+  CONSTRAINT `fk_link_type1`
+    FOREIGN KEY (`type_alias` , `type_file_id`)
+    REFERENCES `paje`.`type` (`alias` , `file_id`)
+    ON DELETE NO ACTION
     ON UPDATE NO ACTION,
-  CONSTRAINT `fk_state_container1`
-    FOREIGN KEY (`container_alias`)
+  CONSTRAINT `fk_link_container1`
+    FOREIGN KEY (`start_container_alias`)
+    REFERENCES `paje`.`container` (`alias`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_link_container2`
+    FOREIGN KEY (`end_container_alias`)
     REFERENCES `paje`.`container` (`alias`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION);

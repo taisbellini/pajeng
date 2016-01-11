@@ -432,9 +432,9 @@ public class PajeContainer extends PajeNamedEntity {
 
 			// check the consistency between end and start links
 			if (!link.getValue().equals(value))
-				throw new Exception("Illegal PajeStartLink in " + traceEvent.getLine()
-						+ ", value is different from the value of the corresponding PajeEndLink (which had "
-						+ link.getValue().getAlias() + ")");
+				throw new Exception("Illegal PajeEndLink in " + traceEvent.getLine()
+						+ ", value is different from the value of the corresponding PajeStartLink (which had "
+						+ link.getValue().getAlias() + ")");	
 
 			checkTimeOrder(event);
 
