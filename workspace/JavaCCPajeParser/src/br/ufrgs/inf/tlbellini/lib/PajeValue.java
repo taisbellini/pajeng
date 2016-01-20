@@ -3,19 +3,19 @@ package br.ufrgs.inf.tlbellini.lib;
 import br.ufrgs.inf.tlbellini.PajeGrammar;
 
 public class PajeValue extends PajeObject {
-	
+
 	private PajeColor color;
 	private String name;
 	private String alias;
 	private PajeType type;
-	
-	public PajeValue(String name, String alias, PajeType type, PajeColor color){
+
+	public PajeValue(String name, String alias, PajeType type, PajeColor color) {
 		this.setColor(color);
 		this.setName(name);
 		this.setAlias(alias);
 		this.setType(type);
-		
-		String sql = PajeGrammar.db.generateInsertValueSQL(alias, name, type.getAlias());
+
+		String sql = PajeGrammar.db.generateInsertValueSQL(alias, name, type.getAlias(), color, PajeGrammar.fileId);
 		PajeGrammar.db.insert(sql);
 	}
 
@@ -36,10 +36,10 @@ public class PajeValue extends PajeObject {
 	}
 
 	public String getAlias() {
-		if(alias.isEmpty()){
+		if (alias.isEmpty()) {
 			return name;
-		}else
-		return alias;
+		} else
+			return alias;
 	}
 
 	public void setAlias(String alias) {
@@ -55,9 +55,9 @@ public class PajeValue extends PajeObject {
 	}
 
 	public String getId() {
-		if(alias.isEmpty()){
+		if (alias.isEmpty()) {
 			return name;
-		}else{
+		} else {
 			return alias;
 		}
 	}

@@ -34,8 +34,8 @@ CREATE TABLE IF NOT EXISTS `paje`.`type` (
   `depth` INT NULL,
   `parent_type_alias` VARCHAR(20) NULL,
   `file_id` INT NOT NULL,
-  `start_link_type` VARCHAR(20) NOT NULL,
-  `end_link_type` VARCHAR(20) NOT NULL,
+  `start_link_type` VARCHAR(20) NULL,
+  `end_link_type` VARCHAR(20) NULL,
   `color` VARCHAR(25) NULL,
   PRIMARY KEY (`alias`, `file_id`),
   INDEX `fk_type_type1_idx` (`parent_type_alias` ASC),
@@ -172,8 +172,8 @@ CREATE TABLE IF NOT EXISTS `paje`.`variable` (
 -- Table `paje`.`state`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `paje`.`state` (
-  `startTime` INT NOT NULL,
-  `endTime` INT NOT NULL,
+  `startTime` DOUBLE NOT NULL,
+  `endTime` DOUBLE NOT NULL,
   `type_alias` VARCHAR(20) NOT NULL,
   `container_alias` VARCHAR(20) NOT NULL,
   `container_file_id` INT NOT NULL,
@@ -203,12 +203,13 @@ CREATE TABLE IF NOT EXISTS `paje`.`state` (
 -- Table `paje`.`link`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `paje`.`link` (
-  `time` DOUBLE NULL,
+  `start_time` DOUBLE NULL,
   `key` VARCHAR(50) NOT NULL,
   `type_alias` VARCHAR(20) NOT NULL,
   `type_file_id` INT NOT NULL,
   `start_container_alias` VARCHAR(20) NOT NULL,
   `end_container_alias` VARCHAR(20) NOT NULL,
+  `end_time` DOUBLE NULL,
   PRIMARY KEY (`type_alias`, `type_file_id`, `key`, `start_container_alias`, `end_container_alias`),
   UNIQUE INDEX `key_UNIQUE` (`key` ASC),
   INDEX `fk_link_type1_idx` (`type_alias` ASC, `type_file_id` ASC),

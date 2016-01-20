@@ -1,5 +1,7 @@
 package br.ufrgs.inf.tlbellini.lib;
 
+import br.ufrgs.inf.tlbellini.PajeGrammar;
+
 public class PajeLinkType extends PajeCategorizedType {
 
 	private PajeType startType;
@@ -9,6 +11,9 @@ public class PajeLinkType extends PajeCategorizedType {
 		super(name, alias, parent);
 		this.setStartType(start);
 		this.setEndType(end);
+		
+		String sql = PajeGrammar.db.generateInsertLinkTypeSQL(alias, name, parent.alias, depth, PajeGrammar.fileId, start.alias, end.alias);
+		PajeGrammar.db.insert(sql);
 	}
 
 	public PajeType getStartType() {

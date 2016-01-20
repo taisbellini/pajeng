@@ -1,5 +1,7 @@
 package br.ufrgs.inf.tlbellini.lib;
 
+import br.ufrgs.inf.tlbellini.PajeGrammar;
+
 public class PajeVariableType extends PajeType {
 
 
@@ -8,6 +10,9 @@ public class PajeVariableType extends PajeType {
 	public PajeVariableType(String name, String alias, PajeType parent, PajeColor color) {
 		super(name, alias, parent);
 		this.setColor(color);
+		
+		String sql = PajeGrammar.db.generateInsertVariableTypeSQL(alias, name, parent.alias, depth, PajeGrammar.fileId, color);
+		PajeGrammar.db.insert(sql);
 	}
 
 	protected PajeColor getColor() {
@@ -17,6 +22,8 @@ public class PajeVariableType extends PajeType {
 	protected void setColor(PajeColor color) {
 		this.color = color;
 	}
+	
+	
 	
 	public PajeTypeNature getNature(){
 		return PajeTypeNature.VariableType;
