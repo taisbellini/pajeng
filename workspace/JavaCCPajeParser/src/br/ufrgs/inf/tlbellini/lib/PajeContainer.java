@@ -151,6 +151,7 @@ public class PajeContainer extends PajeNamedEntity {
 		
 		this.setDestroyed(true);
 		this.setEndTime(time);
+		PajeGrammar.db.setEndContainerDB(alias, PajeGrammar.fileId, time);
 		
 		//finish all entities - set end time in last entity of array
 		for(Map.Entry<PajeType, ArrayList<PajeEntity>> entry : this.getEntities().entrySet()){
@@ -205,8 +206,8 @@ public class PajeContainer extends PajeNamedEntity {
 		this.getEntities().get(type).add(newState);
 		this.stackStates.get(type).add(newState);
 		
-		String sql = PajeGrammar.db.generateInsertStateSQL(newState.getStartTime(), time, type.alias, newState.getValue().getAlias(), this.alias, PajeGrammar.fileId);
-		PajeGrammar.db.insert(sql);	
+		//String sql = PajeGrammar.db.generateInsertStateSQL(newState.getStartTime(), time, type.alias, newState.getValue().getAlias(), this.alias, PajeGrammar.fileId);
+		//PajeGrammar.db.insert(sql);	
 		
 
 	}
@@ -255,7 +256,7 @@ public class PajeContainer extends PajeNamedEntity {
 			String sql = PajeGrammar.db.generateInsertStateSQL(state.getStartTime(), time, type.alias, state.getValue().getAlias(), this.alias, PajeGrammar.fileId);
 			PajeGrammar.db.insert(sql);	
 			//remove from memory
-			this.getEntities().get(type).remove(this.getEntities().get(type).size() - 1);
+			//this.getEntities().get(type).remove(this.getEntities().get(type).size() - 1);
 			
 		} else {
 			throw new Exception("Trying to Pop a State of type " + type.getAlias()
@@ -264,7 +265,7 @@ public class PajeContainer extends PajeNamedEntity {
 
 		if (!this.stackStates.isEmpty() && this.stackStates.containsKey(type)) {
 			//not necessary since the data is in DB 
-			//this.stackStates.get(type).get(this.stackStates.get(type).size() - 1).setEndTime(time);
+			this.stackStates.get(type).get(this.stackStates.get(type).size() - 1).setEndTime(time);
 			this.stackStates.get(type).remove(this.stackStates.get(type).size() - 1);
 			
 		} else {
@@ -277,16 +278,16 @@ public class PajeContainer extends PajeNamedEntity {
 		PajeType type = event.getType();
 		PajeValue value = event.getValue();
 		double time = event.getTime();
-		//PajeTraceEvent traceEvent = event.getEvent();
+		PajeTraceEvent traceEvent = event.getEvent();
 
 		checkTimeOrder(event);
-		//PajeUserEvent newEvent = new PajeUserEvent(this, type, time, value, traceEvent);
+		PajeUserEvent newEvent = new PajeUserEvent(this, type, time, value, traceEvent);
 
 		// check if the type for the event exists in container
 		if (this.getEntities().isEmpty() || !this.getEntities().containsKey(type))
 			this.getEntities().put(type, new ArrayList<PajeEntity>());
 		//not necessary since it is in db
-		//this.getEntities().get(type).add(newEvent);
+		this.getEntities().get(type).add(newEvent);
 		
 		String sql = PajeGrammar.db.generateInsertEventSQL(time, type.alias, this.alias, value.getAlias(), PajeGrammar.fileId);
 		PajeGrammar.db.insert(sql);
@@ -521,7 +522,7 @@ public class PajeContainer extends PajeNamedEntity {
 			this.destroy(time);
 		}
 		for (Map.Entry<String, PajeContainer> child : this.children.entrySet()) {
-			PajeGrammar.db.setEndContainerDB(alias, PajeGrammar.fileId, time);
+			PajeGrammar.db.setEndContainerDB(child.getValue().alias, PajeGrammar.fileId, time);
 			child.getValue().recursiveDestroy(time);
 		}
 	}

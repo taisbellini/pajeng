@@ -8,6 +8,8 @@ import java.util.ArrayList;
 
 import com.mysql.jdbc.Statement;
 
+import br.ufrgs.inf.tlbellini.PajeGrammar;
+
 public class DBClass {
 
 	public String status = "Not connected...";
@@ -60,15 +62,21 @@ public class DBClass {
 	}
 
 	public boolean insert(String sql) {
+
+	    long start = System.currentTimeMillis();
 		try {
 			java.sql.Statement stmt = conn.createStatement();
 			stmt.executeUpdate(sql);
+			long end = System.currentTimeMillis();
+			PajeGrammar.insertionTime += end-start;
 			return true;
 		} catch (SQLException e) {
 			System.out.println("DB ERROR: ");
 			e.printStackTrace();
 			return false;
 		}
+
+	    
 		
 	}
 	
@@ -144,7 +152,7 @@ public class DBClass {
 	}
 	
 	public void setEndContainerDB(String alias, int fileId, double time) {
-		String sql = "UPDATE container SET endTime = " + time + "WHERE alias = " + toString(alias) + "AND file_id = " + fileId;
+		String sql = "UPDATE container SET endTime = " + time + " WHERE alias = " + toString(alias) + " AND file_id = " + fileId;
 		this.insert(sql);
 		
 	}
