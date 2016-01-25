@@ -337,6 +337,9 @@ public class PajeContainer extends PajeNamedEntity {
 		checkTimeOrder(event);
 
 		PajeEntity last = this.getEntities().get(type).get(this.getEntities().get(type).size() - 1);
+		//get the first var to get the time it was set
+		PajeEntity first = this.getEntities().get(type).get(0);
+		
 		if (((PajeUserVariable) last).getStartTime() == time) {
 			((PajeUserVariable) last).addValue(value);
 			return;
@@ -349,7 +352,7 @@ public class PajeContainer extends PajeNamedEntity {
 		PajeUserVariable newValue = new PajeUserVariable(this, type, time, lastVal + value, traceEvent);
 		this.getEntities().get(type).add(newValue);
 		
-		String sql = PajeGrammar.db.generateInsertVariableSQL(((PajeUserVariable) last).getStartTime(), type.alias, this.alias, newValue.getValue(), time, PajeGrammar.fileId);
+		String sql = PajeGrammar.db.generateInsertVariableSQL(((PajeUserVariable) first).getStartTime(), type.alias, this.alias, newValue.getValue(), time, PajeGrammar.fileId);
 		PajeGrammar.db.insert(sql);
 	}
 
@@ -366,6 +369,9 @@ public class PajeContainer extends PajeNamedEntity {
 		checkTimeOrder(event);
 
 		PajeEntity last = this.getEntities().get(type).get(this.getEntities().get(type).size() - 1);
+		//get the first var to get the time it was set
+		PajeEntity first = this.getEntities().get(type).get(0);
+		
 		if (((PajeUserVariable) last).getStartTime() == time) {
 			((PajeUserVariable) last).subValue(value);
 			return;
@@ -378,7 +384,7 @@ public class PajeContainer extends PajeNamedEntity {
 		PajeUserVariable newValue = new PajeUserVariable(this, type, time, lastVal - value, traceEvent);
 		this.getEntities().get(type).add(newValue);
 		
-		String sql = PajeGrammar.db.generateInsertVariableSQL(((PajeUserVariable) last).getStartTime(), type.alias, this.alias, newValue.getValue(), time, PajeGrammar.fileId);
+		String sql = PajeGrammar.db.generateInsertVariableSQL(((PajeUserVariable) first).getStartTime(), type.alias, this.alias, newValue.getValue(), time, PajeGrammar.fileId);
 		PajeGrammar.db.insert(sql);
 	}
 

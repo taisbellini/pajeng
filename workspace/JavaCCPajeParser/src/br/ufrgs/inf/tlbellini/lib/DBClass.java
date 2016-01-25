@@ -108,7 +108,7 @@ public class DBClass {
 	public String generateInsertVariableTypeSQL(String alias, String name, String parent, int depth, int fileId,
 			PajeColor color) {
 		return "INSERT INTO type (alias, name, parent_type_alias, depth, file_id, color) " + "VALUES ( " + toString(alias)  + " , " + toString(name) + ", " + 
-				toString(parent) + ", " + depth + ", " + fileId + "," + getStringColor(color) + ")";
+				toString(parent) + ", " + depth + ", " + fileId + "," + toString(getStringColor(color)) + ")";
 		
 	}
 	
