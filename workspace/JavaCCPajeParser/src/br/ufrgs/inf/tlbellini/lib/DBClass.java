@@ -126,7 +126,7 @@ public class DBClass {
 	}
 	
 	public String generateInsertEventSQL(double time, String type, String container, String value, int fileId) {
-		return "INSERT INTO event (time, type_alias, container_alias, value_alias, type_file_id) " + "VALUES ( " + toString(type)  + " , " + toString(container) + ", " + 
+		return "INSERT INTO event (time, type_alias, container_alias, value_alias, type_file_id) " + "VALUES ( " + time + ", " + toString(type)  + " , " + toString(container) + ", " + 
 				toString(value) +  ", " + fileId + ")";
 		
 	}
