@@ -120,7 +120,7 @@ public class DBClass {
 	}
 
 	public String generateInsertValueSQL(String alias, String name, String type, PajeColor color, int fileId) {
-		return "INSERT INTO value (alias, name, type_alias, color, type_file_id)" + "VALUES ( " + toString(alias) + " , "+ toString(name) + ", " + 
+		return "INSERT INTO value (alias, name, type_alias, color, type_file_id) " + "VALUES ( " + toString(alias) + " , "+ toString(name) + ", " + 
 				toString(type) + "," + getStringColor(color) +  "," + fileId + ")";
 		
 	}
@@ -136,9 +136,9 @@ public class DBClass {
 				value +  ", " + update + "," + fileId + ")";
 	}
 	
-	public String generateInsertLinkSQL(double start, double end, String key, String type, String start_container, String end_container,
+	public String generateInsertLinkSQL(double start, double end, String key, String value, String type, String start_container, String end_container,
 			int fileId) {
-		return "INSERT INTO link (start, end, key, type_alias, start_container_alias, end_container_alias, type_file_id) " + "VALUES ( " + start + ","+ end +  "," + toString(key)  + " , " + toString(type) + ", " + 
+		return "INSERT INTO link (start_time, end_time, link_key, value_alias, type_alias, start_container_alias, end_container_alias, type_file_id) " + "VALUES ( " + start + ","+ end +  "," + toString(key)  + " , " + toString(value) + "," + toString(type) + ", " + 
 				toString(start_container) +  ", " + toString(end_container) + "," + fileId + ")";
 	}
 	//if filename is the same 

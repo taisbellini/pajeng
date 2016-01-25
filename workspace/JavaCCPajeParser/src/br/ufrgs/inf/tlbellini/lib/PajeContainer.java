@@ -427,7 +427,7 @@ public class PajeContainer extends PajeNamedEntity {
 
 			this.getEntities().get(type).add(link);
 			
-			String sql = PajeGrammar.db.generateInsertLinkSQL(link.getStartTime(), link.getEndTime(), key, type.alias, this.alias, link.getEndContainer().alias, PajeGrammar.fileId);
+			String sql = PajeGrammar.db.generateInsertLinkSQL(link.getStartTime(), link.getEndTime(), key, link.getValue().getAlias(), type.alias, link.getStartContainer().alias, link.getEndContainer().alias, PajeGrammar.fileId);
 			PajeGrammar.db.insert(sql);
 
 			pendingLinks.get(type).remove(key);
@@ -477,7 +477,7 @@ public class PajeContainer extends PajeNamedEntity {
 
 			this.getEntities().get(type).add(link);
 			
-			String sql = PajeGrammar.db.generateInsertLinkSQL(link.getStartTime(), link.getEndTime(), key, type.alias, link.getStartContainer().alias, this.alias, PajeGrammar.fileId);
+			String sql = PajeGrammar.db.generateInsertLinkSQL(link.getStartTime(), link.getEndTime(), key, link.getValue().getAlias(), type.alias, link.getStartContainer().alias, link.getEndContainer().alias, PajeGrammar.fileId);
 			PajeGrammar.db.insert(sql);
 
 
