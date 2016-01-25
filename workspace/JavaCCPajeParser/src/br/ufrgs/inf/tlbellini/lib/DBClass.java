@@ -132,7 +132,7 @@ public class DBClass {
 	}
 	
 	public String generateInsertVariableSQL(double time, String type, String container, double value, double update, int fileId) {
-		return "INSERT INTO variable (time, type_alias, container_alias, value, update_time, container_file_id) " + "VALUES ( " + toString(type)  + " , " + toString(container) + ", " + 
+		return "INSERT INTO variable (time, type_alias, container_alias, value, update_time, container_file_id) " + "VALUES ( " + time + "," + toString(type)  + " , " + toString(container) + ", " + 
 				value +  ", " + update + "," + fileId + ")";
 	}
 	
@@ -143,10 +143,13 @@ public class DBClass {
 	}
 	//if filename is the same 
 	public int getFileId(String filename) throws SQLException{
+		long start = System.currentTimeMillis();
 		java.sql.Statement stmt = conn.createStatement();
 		String sql = "SELECT id FROM file WHERE name = " + toString(filename) + " ORDER BY id DESC LIMIT 1";
 		ResultSet rs = stmt.executeQuery(sql);
 		rs.next();
+		long end = System.currentTimeMillis();
+		PajeGrammar.insertionTime += end-start;
 		return rs.getInt("id");
 		
 	}
