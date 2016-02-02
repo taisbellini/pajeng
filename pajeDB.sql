@@ -178,6 +178,7 @@ CREATE TABLE IF NOT EXISTS `paje`.`state` (
   `container_alias` VARCHAR(20) NOT NULL,
   `container_file_id` INT NOT NULL,
   `value_alias` VARCHAR(20) NOT NULL,
+  `imbrication` DOUBLE NULL,
   PRIMARY KEY (`type_alias`, `container_alias`, `container_file_id`, `value_alias`),
   INDEX `fk_state_type1_idx` (`type_alias` ASC),
   INDEX `fk_state_container1_idx` (`container_alias` ASC, `container_file_id` ASC),

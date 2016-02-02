@@ -87,9 +87,9 @@ public class DBClass {
 	
 	
 	public String generateInsertStateSQL(double start, double end, String type_alias, String value_alias,
-			String container_alias, int fileId) {
-		return "INSERT INTO state (startTime, endTime, type_alias, value_alias, container_alias, container_file_id) " + "VALUES (" + start
-				+ ", " + end + ", " + toString(type_alias) + ", " + toString(value_alias) + ", " + toString(container_alias) + ","+ fileId + ")";
+			String container_alias, double imbrication, int fileId) {
+		return "INSERT INTO state (startTime, endTime, type_alias, value_alias, container_alias, imbrication, container_file_id) " + "VALUES (" + start
+				+ ", " + end + ", " + toString(type_alias) + ", " + toString(value_alias) + ", " + toString(container_alias) + ","+ imbrication + "," + fileId + ")";
 	}
 
 	public String generateInsertContainerSQL(String alias, String name, double start, double end, String parent_alias,

@@ -175,7 +175,7 @@ public class PajeContainer extends PajeNamedEntity {
 					((PajeDoubleTimedEntity) ent).setEndTime(time);
 					
 					String sql = PajeGrammar.db.generateInsertStateSQL(((PajeSingleTimedEntity) ent).getStartTime(), 
-							((PajeDoubleTimedEntity) ent).getEndTime(), ent.getType().getAlias(), ((PajeValueEntity) ent).getValue().getAlias(), this.alias, PajeGrammar.fileId);
+							((PajeDoubleTimedEntity) ent).getEndTime(), ent.getType().getAlias(), ((PajeValueEntity) ent).getValue().getAlias(), this.alias, ((PajeUserState) ent).getImbrication(), PajeGrammar.fileId);
 					PajeGrammar.db.insert(sql);
 				}
 					
@@ -253,10 +253,8 @@ public class PajeContainer extends PajeNamedEntity {
 
 			PajeUserState state = (PajeUserState) this.getEntities().get(type).get(this.getEntities().get(type).size() - 1);
 			
-			String sql = PajeGrammar.db.generateInsertStateSQL(state.getStartTime(), time, type.alias, state.getValue().getAlias(), this.alias, PajeGrammar.fileId);
+			String sql = PajeGrammar.db.generateInsertStateSQL(state.getStartTime(), time, type.alias, state.getValue().getAlias(), this.alias, state.getImbrication(), PajeGrammar.fileId);
 			PajeGrammar.db.insert(sql);	
-			//remove from memory
-			//this.getEntities().get(type).remove(this.getEntities().get(type).size() - 1);
 			
 		} else {
 			throw new Exception("Trying to Pop a State of type " + type.getAlias()
@@ -516,7 +514,7 @@ public class PajeContainer extends PajeNamedEntity {
 			if (stackStates.containsKey(event.getType())) {
 				for (PajeUserState state : this.stackStates.get(event.getType())) {
 					state.setEndTime(event.getTime());
-					String sql = PajeGrammar.db.generateInsertStateSQL(state.getStartTime(), state.getEndTime(), state.getType().alias, state.getValue().getAlias(), this.alias, PajeGrammar.fileId);
+					String sql = PajeGrammar.db.generateInsertStateSQL(state.getStartTime(), state.getEndTime(), state.getType().alias, state.getValue().getAlias(), this.alias, state.getImbrication(), PajeGrammar.fileId);
 					PajeGrammar.db.insert(sql);
 				}
 			}
