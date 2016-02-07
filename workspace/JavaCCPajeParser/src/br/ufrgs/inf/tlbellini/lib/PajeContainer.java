@@ -171,15 +171,12 @@ public class PajeContainer extends PajeNamedEntity {
 		//end stack 
 		for(Map.Entry<PajeType, ArrayList<PajeUserState>> entry : this.stackStates.entrySet()){
 			for(PajeEntity ent : entry.getValue()){
-				if(((PajeDoubleTimedEntity) ent).getEndTime() == -1){
-					((PajeDoubleTimedEntity) ent).setEndTime(time);
-					
-					String sql = PajeGrammar.db.generateInsertStateSQL(((PajeSingleTimedEntity) ent).getStartTime(), 
-							((PajeDoubleTimedEntity) ent).getEndTime(), ent.getType().getAlias(), ((PajeValueEntity) ent).getValue().getAlias(), this.alias, ((PajeUserState) ent).getImbrication(), PajeGrammar.fileId);
-					PajeGrammar.db.insert(sql);
-				}
-					
+				// just add to db, the setEndTime was done in the above "for"for entities	
+				String sql = PajeGrammar.db.generateInsertStateSQL(((PajeSingleTimedEntity) ent).getStartTime(), 
+						((PajeDoubleTimedEntity) ent).getEndTime(), ent.getType().getAlias(), ((PajeValueEntity) ent).getValue().getAlias(), this.alias, ((PajeUserState) ent).getImbrication(), PajeGrammar.fileId);
+				PajeGrammar.db.insert(sql);
 			}
+					
 		}
 		
 		this.recursiveDestroy(time);
@@ -206,9 +203,6 @@ public class PajeContainer extends PajeNamedEntity {
 		this.getEntities().get(type).add(newState);
 		this.stackStates.get(type).add(newState);
 		
-		//String sql = PajeGrammar.db.generateInsertStateSQL(newState.getStartTime(), time, type.alias, newState.getValue().getAlias(), this.alias, PajeGrammar.fileId);
-		//PajeGrammar.db.insert(sql);	
-		
 
 	}
 
@@ -222,12 +216,15 @@ public class PajeContainer extends PajeNamedEntity {
 		checkTimeOrder(event);
 
 		// does not create if doesn't exist
+		//TODO examples given by Lucas were not following paje's documentation
 		if (this.getEntities().isEmpty() || !this.getEntities().containsKey(type))
-			throw new Exception("A Push State for type " + type.getAlias() + " was done in line " + traceEvent.getLine()
-					+ " before a Set State for the type");
+			//throw new Exception("A Push State for type " + type.getAlias() + " was done in line " + traceEvent.getLine()
+				//	+ " before a Set State for the type");
+			this.getEntities().put(type, new ArrayList<PajeEntity>());
 		if (this.stackStates.isEmpty() || !this.stackStates.containsKey(type))
-			throw new Exception("A Push State for type " + type.getAlias() + " was done in line " + traceEvent.getLine()
-					+ " before a Set State for the type");
+			//throw new Exception("A Push State for type " + type.getAlias() + " was done in line " + traceEvent.getLine()
+					//+ " before a Set State for the type");
+			this.stackStates.put(type, new ArrayList<PajeUserState>());
 
 		PajeUserState newState = new PajeUserState(this, type, time, value, traceEvent);
 		newState.setImbrication(this.stackStates.size());
@@ -246,13 +243,14 @@ public class PajeContainer extends PajeNamedEntity {
 		checkTimeOrder(event);
 
 		// get last push from that type
-		//refactor: get object first
+		PajeUserState state = (PajeUserState) this.getEntities().get(type).get(this.getEntities().get(type).size() - 1);
+		
 		if (!this.getEntities().isEmpty() && this.getEntities().containsKey(type)) {
-			((PajeDoubleTimedEntity) this.getEntities().get(type).get(this.getEntities().get(type).size() - 1))
-					.setEndTime(time);
+			state.setEndTime(time);
 
-			PajeUserState state = (PajeUserState) this.getEntities().get(type).get(this.getEntities().get(type).size() - 1);
+			this.getEntities().get(type).remove(state);
 			
+			//only inserts here
 			String sql = PajeGrammar.db.generateInsertStateSQL(state.getStartTime(), time, type.alias, state.getValue().getAlias(), this.alias, state.getImbrication(), PajeGrammar.fileId);
 			PajeGrammar.db.insert(sql);	
 			
@@ -260,11 +258,10 @@ public class PajeContainer extends PajeNamedEntity {
 			throw new Exception("Trying to Pop a State of type " + type.getAlias()
 					+ " that was not previously Pushed in line " + traceEvent.getLine());
 		}
-
-		if (!this.stackStates.isEmpty() && this.stackStates.containsKey(type)) {
-			//not necessary since the data is in DB 
-			this.stackStates.get(type).get(this.stackStates.get(type).size() - 1).setEndTime(time);
-			this.stackStates.get(type).remove(this.stackStates.get(type).size() - 1);
+		
+		//remove from stack since it is in DB
+		if (!this.stackStates.isEmpty() && this.stackStates.containsKey(type)) { 
+			this.stackStates.get(type).remove(state);
 			
 		} else {
 			throw new Exception("Trying to Pop a State of type " + type.getAlias()

@@ -67,6 +67,7 @@ public class DBClass {
 		try {
 			java.sql.Statement stmt = conn.createStatement();
 			stmt.executeUpdate(sql);
+			stmt.close();
 			long end = System.currentTimeMillis();
 			PajeGrammar.insertionTime += end-start;
 			return true;
@@ -75,7 +76,6 @@ public class DBClass {
 			e.printStackTrace();
 			return false;
 		}
-
 	    
 		
 	}
@@ -145,12 +145,21 @@ public class DBClass {
 	public int getFileId(String filename) throws SQLException{
 		long start = System.currentTimeMillis();
 		java.sql.Statement stmt = conn.createStatement();
-		String sql = "SELECT id FROM file WHERE name = " + toString(filename) + " ORDER BY id DESC LIMIT 1";
-		ResultSet rs = stmt.executeQuery(sql);
-		rs.next();
-		long end = System.currentTimeMillis();
-		PajeGrammar.insertionTime += end-start;
-		return rs.getInt("id");
+		ResultSet rs = null;
+		try{
+			String sql = "SELECT id FROM file WHERE name = " + toString(filename) + " ORDER BY id DESC LIMIT 1";
+			rs = stmt.executeQuery(sql);
+			rs.next();
+			long end = System.currentTimeMillis();
+			PajeGrammar.insertionTime += end-start;
+			int result = rs.getInt("id");
+			rs.close();
+			stmt.close();
+			return result;
+		}catch (Exception e){
+			e.printStackTrace();
+			return -1;
+		}
 		
 	}
 	
