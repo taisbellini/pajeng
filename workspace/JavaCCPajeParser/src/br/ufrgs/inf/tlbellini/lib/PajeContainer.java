@@ -192,10 +192,14 @@ private void pajePushState(PajeStateEvent event) throws Exception{
 		checkTimeOrder(event);
 		
 		//does not create if doesn't exist
-		if(this.getEntities().isEmpty() || !this.getEntities().containsKey(type))
-			throw new Exception("A Push State for type " + type.getAlias() + " was done in line " + traceEvent.getLine() + " before a Set State for the type");
-		if(this.stackStates.isEmpty() || !this.stackStates.containsKey(type))
-			throw new Exception("A Push State for type " + type.getAlias() + " was done in line " + traceEvent.getLine() + " before a Set State for the type");
+		if(this.getEntities().isEmpty() || !this.getEntities().containsKey(type)){
+//			throw new Exception("A Push State for type " + type.getAlias() + " was done in line " + traceEvent.getLine() + " before a Set State for the type");
+		  this.getEntities().put(type, new ArrayList<PajeEntity>());
+		}
+		if(this.stackStates.isEmpty() || !this.stackStates.containsKey(type)){
+//			throw new Exception("A Push State for type " + type.getAlias() + " was done in line " + traceEvent.getLine() + " before a Set State for the type");
+		  this.stackStates.put(type, new ArrayList<PajeUserState>());
+		}
 		
 		PajeUserState newState = new PajeUserState(this, type, time, value, traceEvent);
 		//check if correct: assuming 0, 1 , 2 ...
