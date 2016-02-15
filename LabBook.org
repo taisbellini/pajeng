@@ -34,3 +34,41 @@
 5. Database modeling
 6. Perf. Eval. / Experimentation / Results
 7. Conclusion
+* 2016-02-15 Performance issues                                  :Lucas:Tais:
+
+Tais report that her solution to DB insertion has severe performance
+issues. The initial solution was that every *pop* event become a
+insert. That didn't work, so Tais optimize with an alternative
+implementation which uses StringBuffer and create many insert commands
+on that object. They only get executed at the end of the parsing. Tais
+was never capable to evaluate if this solution is faster because
+execution runs out of memory.
+
+So, by looking into this SO entry:
+
++ http://stackoverflow.com/questions/11389449/performance-of-mysql-insert-statements-in-java-batch-mode-prepared-statements-v
+
+We propose a new attempt to solve the performance problem. The SO
+entry proposes four solutions, we will take the last one, which seems
+the best. To correctly adapt this fourth solution to Tais's case, we
+should limit the batch size to something acceptable. If not, we will
+run out of memory again because the (usual) trace file size is just
+too big.
+
+So, next plans are like this:
+- Tais will limit the size of the batch considering the number of
+  operations on it.
+- Each batch will contain five StringBuffers, one for each paje type
+  (Container, State, Link, Variable, and Event).
+- Every time something gets added to one of these string buffers, the
+  operation count of the batch gets increased.
+- When the batch size reaches a (configurable) value X, the code
+  executes the batch, zero it, and we start again filling.
+- Tais will do a quick performance analysis by changing the
+  (configurable) value X to see the impact in execution time.
+
+How to know the baseline:
+- Find out how long it take to only parse with the Java version. You
+  can do that by checking out the *no-db* branch.
+
+
