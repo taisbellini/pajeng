@@ -119,3 +119,68 @@ OU
 
 Acho que é isso que precisa pra executar. Se tiver algum problema pode
 me avisar.
+* 2016-02-26 Meeting with Tais                                   :Lucas:Tais:
+
+How to get it working.
+
+Install mysql, root password should be root:
+
+#+begin_src sh :results output :session :exports both
+sudo apt-get install mysql-server
+#+end_src
+
+Run the =pajeDB.sql= to create the tables.
+
+Fix =compile.sh= to have the correct CLASSPATH.
+
+Problems found:
+- Program does not terminate
+- 
+
+
+_Plugin_:
+
+- Today, SQL commands are created in the middle of the PajeSimulator
+  source code. Moreover, the different strategies (searching for
+  performance) are commented in the same source code. This leads to
+  design that is difficult to manage, and also hard to evaluate the
+  different performance options.
+
+- So my suggestion is to create a plugin for each type of output from
+  the simulator. You will go back in time so the Paje Simulator source
+  code is as clean as possible, and instrument this code to contain
+  specific calls when something should be registered (such as the pop,
+  the end links, and so on).
+
+- The plugin will be called in this different instrumentation points
+  and do what it was design to do. A first plugin to be implemented is
+  the one with the SQL insert commands.
+
+- Alternative versions to look for better performance should be
+  implemented as other plugins, that could be subclasses (derived)
+  from the initial one, if there is some functionality sharing between
+  them.
+
+- Plugins already proposed by Tais:
+  - Multiple batches, but are handle sequentially
+  - Multiple batches, but with threads
+  - Print the SQL commands to output
+
+- Class model for this plugin story
+  - PajePlugin
+    - PajePluginMultipleBatchesSequential
+      - PajePluginMultipleBatchesThreads
+    - PajePluginPrintSQLCommandsToOutput
+    - PajePluginNull
+    - PajePluginOutputPJDUMP
+
+- Clean PajeSimulator
+  - Create PajePlugin
+
+- Exhaustive list of instrumentations points for the plugins
+  - All types and values definitions
+  - All create containers
+  - Pops
+  - Events
+  - Add, Sub, Set variables
+  - Start and end of links
