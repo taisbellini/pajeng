@@ -27,7 +27,8 @@ public class DBClass {
 			String serverName = "localhost";
 			String mydatabase = "paje";
 			String useSSL = "?verifyServerCertificate=false" + "&useSSL=false";
-			String url = "jdbc:mysql://" + serverName + "/" + mydatabase + useSSL;
+			String batch = "&rewriteBatchedStatements=true";
+			String url = "jdbc:mysql://" + serverName + "/" + mydatabase + useSSL + batch;
 			String username = "root";
 			String password = "root";
 			connection = DriverManager.getConnection(url, username, password);
@@ -94,8 +95,22 @@ public class DBClass {
 
 	public String generateInsertContainerSQL(String alias, String name, double start, double end, String parent_alias,
 			String type_alias, int fileId) {
-		return "INSERT INTO container (alias, name, startTime, endTime, parent_container_alias, type_alias, file_id) " + "VALUES (" + toString(alias) + ", " + toString(name) + ", " + start
-				+ ", " + end + ", " + toString(parent_alias) + ", " + toString(type_alias) + "," + fileId + ")";
+		StringBuilder sb = new StringBuilder("INSERT INTO container (alias, name, startTime, endTime, parent_container_alias, type_alias, file_id) VALUES (");
+		sb.append(toString(alias));
+		sb.append(", ");
+		sb.append(toString(name));
+		sb.append(", ");
+		sb.append(start);
+		sb.append(", ");
+		sb.append(end);
+		sb.append(", ");
+		sb.append(toString(parent_alias));
+		sb.append(", ");
+		sb.append(toString(type_alias));
+		sb.append(",");
+		sb.append(fileId);
+		sb.append(")");
+		return sb.toString();
 		
 	}
 
@@ -164,8 +179,13 @@ public class DBClass {
 	}
 	
 	public void setEndContainerDB(String alias, int fileId, double time) {
-		String sql = "UPDATE container SET endTime = " + time + " WHERE alias = " + toString(alias) + " AND file_id = " + fileId;
-		this.insert(sql);
+		StringBuilder sb = new StringBuilder("UPDATE container SET endTime = ");
+		sb.append(time);
+		sb.append(" WHERE alias = ");
+		sb.append(toString(alias));
+		sb.append(" AND file_id = ");
+		sb.append(fileId);
+		this.insert(sb.toString());
 		
 	}
 	

@@ -1,9 +1,13 @@
 package br.ufrgs.inf.tlbellini.lib;
 
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.regex.Pattern;
 
 import br.ufrgs.inf.tlbellini.PajeGrammar;
@@ -22,9 +26,16 @@ public class PajeSimulator extends PajeComponent {
 	protected double lastKnownTime;
 	
 	public int fileId; 
+	
+	PreparedStatement stmtLink;
+	PreparedStatement stmtEvent;
+	PreparedStatement stmtVariable;
+	PreparedStatement stmtState;
+	
+	
 
 
-	public void init() {
+	public void init() throws SQLException {
 		// name, alias, parent
 		this.rootType = new PajeContainerType("0","0", null);
 
@@ -34,6 +45,17 @@ public class PajeSimulator extends PajeComponent {
 		typeNamesMap.put(rootType.getName(), rootType);
 		contMap.put(root.getId(), root);
 		contNamesMap.put(root.getName(), root);
+		
+		stmtLink = PajeGrammar.db.conn.prepareStatement(
+				"INSERT INTO link (start_time, end_time, link_key, value_alias, type_alias, start_container_alias, end_container_alias, type_file_id) VALUES (?,?,?,?,?,?,?,?)");
+		stmtEvent = PajeGrammar.db.conn.prepareStatement(
+				"INSERT INTO event (time, type_alias, container_alias, value_alias, type_file_id) VALUES (?,?,?,?,?)");
+		stmtVariable = PajeGrammar.db.conn.prepareStatement(
+				"INSERT INTO variable (time, type_alias, container_alias, value, update_time, container_file_id) VALUES (?,?,?,?,?,?)");
+		stmtState = PajeGrammar.db.conn.prepareStatement(
+				"INSERT INTO state (container_alias, type_alias, startTime, endTime, value_alias, imbrication, container_file_id) VALUES (?,?,?,?,?,?,?)");
+		
+		
 		
 	    
 	}
@@ -73,6 +95,34 @@ public class PajeSimulator extends PajeComponent {
 	
 	public void finish() throws Exception{
 		this.root.recursiveDestroy(this.lastKnownTime);
+		long start = System.currentTimeMillis();
+		ExecutorService executor = Executors.newFixedThreadPool(4);
+		//this.stmtEvent.executeBatch();
+		//this.stmtLink.executeBatch();
+		//this.stmtState.executeBatch();
+		//this.stmtVariable.executeBatch();
+		Runnable event = new BatchExecutor(this.stmtEvent);
+		//Thread te = new Thread(event);
+		//te.start();
+		//executor.execute(event);
+		Runnable link = new BatchExecutor(this.stmtLink);
+		//Thread tl = new Thread(link);
+		//tl.start();
+		//executor.execute(link);
+		Runnable state = new BatchExecutor(this.stmtState);
+		//Thread ts = new Thread(state);
+		//ts.start();
+		executor.execute(state);
+		Runnable var = new BatchExecutor(this.stmtVariable);
+		//Thread tv = new Thread(var);
+		//tv.start();
+		//executor.execute(var);
+		//executor.shutdown();
+		//while (!executor.isTerminated()) {
+		//}
+		
+		long end = System.currentTimeMillis();
+		PajeGrammar.insertionTime += end-start;
 	}
 
 	public void report() {

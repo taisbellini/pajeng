@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import java.sql.PreparedStatement;
+
 import br.ufrgs.inf.tlbellini.PajeGrammar;
 
 public class PajeContainer extends PajeNamedEntity {
@@ -33,6 +35,8 @@ public class PajeContainer extends PajeNamedEntity {
 	// keep all simulated entities
 
 	private Map<PajeType, ArrayList<PajeEntity>> entities = new HashMap<PajeType, ArrayList<PajeEntity>>();
+	
+	
 
 	public PajeContainer(double time, String name, String alias, PajeContainer parent, PajeType type,
 			PajeTraceEvent event) {
@@ -44,9 +48,11 @@ public class PajeContainer extends PajeNamedEntity {
 			this.depth = parent.depth + 1;
 		} else
 			this.depth = 0;
-		
-		//insert container in DB so that it can be referred throughout the simulation
-		String sql = PajeGrammar.db.generateInsertContainerSQL(alias, name, time, -1, parent != null? parent.alias : "null" , type.alias, PajeGrammar.fileId);
+
+		// insert container in DB so that it can be referred throughout the
+		// simulation
+		String sql = PajeGrammar.db.generateInsertContainerSQL(alias, name, time, -1,
+				parent != null ? parent.alias : "null", type.alias, PajeGrammar.fileId);
 		PajeGrammar.db.insert(sql);
 	}
 
@@ -147,41 +153,59 @@ public class PajeContainer extends PajeNamedEntity {
 
 	}
 
-	private void destroy (double time) throws Exception{
-		
+	private void destroy(double time) throws Exception {
+
 		this.setDestroyed(true);
 		this.setEndTime(time);
 		PajeGrammar.db.setEndContainerDB(alias, PajeGrammar.fileId, time);
+
+		// finish all entities - set end time in last entity of array
 		
-		//finish all entities - set end time in last entity of array
-		for(Map.Entry<PajeType, ArrayList<PajeEntity>> entry : this.getEntities().entrySet()){
+		for (Map.Entry<PajeType, ArrayList<PajeEntity>> entry : this.getEntities().entrySet()) {
 			ArrayList<PajeEntity> list = entry.getValue();
-			//if event, no need to set end time
-			if((list.get(list.size()-1).getType().getNature() != PajeTypeNature.EventType) && ((PajeDoubleTimedEntity) list.get(list.size()-1)).getEndTime() == -1)
-				((PajeDoubleTimedEntity) list.get(list.size()-1)).setEndTime(time);
-		}
-		
-		//check pending links
-		for(Map.Entry<PajeType, Map<String, PajeUserLink>> links : this.pendingLinks.entrySet()){
-			if(!links.getValue().isEmpty())
-				throw new Exception("Can't destroy container " + this.alias + " because it has pending links");
-			
-		}
-				
-		//end stack 
-		for(Map.Entry<PajeType, ArrayList<PajeUserState>> entry : this.stackStates.entrySet()){
-			for(PajeEntity ent : entry.getValue()){
-				// just add to db, the setEndTime was done in the above "for"for entities	
-				String sql = PajeGrammar.db.generateInsertStateSQL(((PajeSingleTimedEntity) ent).getStartTime(), 
-						((PajeDoubleTimedEntity) ent).getEndTime(), ent.getType().getAlias(), ((PajeValueEntity) ent).getValue().getAlias(), this.alias, ((PajeUserState) ent).getImbrication(), PajeGrammar.fileId);
-				PajeGrammar.db.insert(sql);
+			if (!list.isEmpty()) {
+				// if event, no need to set end time
+				if ((list.get(list.size() - 1).getType().getNature() != PajeTypeNature.EventType)
+						&& ((PajeDoubleTimedEntity) list.get(list.size() - 1)).getEndTime() == -1)
+					((PajeDoubleTimedEntity) list.get(list.size() - 1)).setEndTime(time);
 			}
-					
+
 		}
-		
+
+		// check pending links
+		for (Map.Entry<PajeType, Map<String, PajeUserLink>> links : this.pendingLinks.entrySet()) {
+			if (!links.getValue().isEmpty())
+				throw new Exception("Can't destroy container " + this.alias + " because it has pending links");
+
+		}
+		// end stack
+		for (Map.Entry<PajeType, ArrayList<PajeUserState>> entry : this.stackStates.entrySet()) {
+			for (PajeUserState ent : entry.getValue()) {
+				// just add to db, the setEndTime was done in the above "for"for
+				// entities
+				// String sql =
+				// PajeGrammar.db.generateInsertStateSQL(((PajeSingleTimedEntity)
+				// ent).getStartTime(),
+				// ((PajeDoubleTimedEntity) ent).getEndTime(),
+				// ent.getType().getAlias(), ((PajeValueEntity)
+				// ent).getValue().getAlias(), this.alias, ((PajeUserState)
+				// ent).getImbrication(), PajeGrammar.fileId);
+				// PajeGrammar.db.insert(sql);
+				
+				PajeGrammar.simulator.stmtState.setString(1, this.alias);
+				PajeGrammar.simulator.stmtState.setString(2, ent.getType().alias);
+				PajeGrammar.simulator.stmtState.setDouble(3, ent.getStartTime());
+				PajeGrammar.simulator.stmtState.setDouble(4, ent.getEndTime());
+				PajeGrammar.simulator.stmtState.setString(5, ent.getValue().getAlias());
+				PajeGrammar.simulator.stmtState.setDouble(6, ent.getImbrication());
+				PajeGrammar.simulator.stmtState.setInt(7, PajeGrammar.fileId);
+				
+				PajeGrammar.simulator.stmtState.addBatch();
+			}
+
+		}
 		this.recursiveDestroy(time);
-		
-		
+
 	}
 
 	private void pajeSetState(PajeStateEvent event) throws Exception {
@@ -202,7 +226,6 @@ public class PajeContainer extends PajeNamedEntity {
 
 		this.getEntities().get(type).add(newState);
 		this.stackStates.get(type).add(newState);
-		
 
 	}
 
@@ -216,14 +239,16 @@ public class PajeContainer extends PajeNamedEntity {
 		checkTimeOrder(event);
 
 		// does not create if doesn't exist
-		//TODO examples given by Lucas were not following paje's documentation
+		// TODO examples given by Lucas were not following paje's documentation
 		if (this.getEntities().isEmpty() || !this.getEntities().containsKey(type))
-			//throw new Exception("A Push State for type " + type.getAlias() + " was done in line " + traceEvent.getLine()
-				//	+ " before a Set State for the type");
+			// throw new Exception("A Push State for type " + type.getAlias() +
+			// " was done in line " + traceEvent.getLine()
+			// + " before a Set State for the type");
 			this.getEntities().put(type, new ArrayList<PajeEntity>());
 		if (this.stackStates.isEmpty() || !this.stackStates.containsKey(type))
-			//throw new Exception("A Push State for type " + type.getAlias() + " was done in line " + traceEvent.getLine()
-					//+ " before a Set State for the type");
+			// throw new Exception("A Push State for type " + type.getAlias() +
+			// " was done in line " + traceEvent.getLine()
+			// + " before a Set State for the type");
 			this.stackStates.put(type, new ArrayList<PajeUserState>());
 
 		PajeUserState newState = new PajeUserState(this, type, time, value, traceEvent);
@@ -244,26 +269,40 @@ public class PajeContainer extends PajeNamedEntity {
 
 		// get last push from that type
 		PajeUserState state = (PajeUserState) this.getEntities().get(type).get(this.getEntities().get(type).size() - 1);
-		
+
 		if (!this.getEntities().isEmpty() && this.getEntities().containsKey(type)) {
 			state.setEndTime(time);
 
+			// only inserts here
+			// String sql =
+			// PajeGrammar.db.generateInsertStateSQL(state.getStartTime(), time,
+			// type.alias, state.getValue().getAlias(), this.alias,
+			// state.getImbrication(), PajeGrammar.fileId);
+			// PajeGrammar.db.insert(sql);
+			
+			PajeGrammar.simulator.stmtState.setString(1, this.alias);
+			PajeGrammar.simulator.stmtState.setString(2, state.getType().alias);
+			PajeGrammar.simulator.stmtState.setDouble(3, state.getStartTime());
+			PajeGrammar.simulator.stmtState.setDouble(4, state.getEndTime());
+			PajeGrammar.simulator.stmtState.setString(5, state.getValue().getAlias());
+			PajeGrammar.simulator.stmtState.setDouble(6, state.getImbrication());
+			PajeGrammar.simulator.stmtState.setInt(7, PajeGrammar.fileId);
+			
+			PajeGrammar.simulator.stmtState.addBatch();
+			
 			this.getEntities().get(type).remove(state);
-			
-			//only inserts here
-			String sql = PajeGrammar.db.generateInsertStateSQL(state.getStartTime(), time, type.alias, state.getValue().getAlias(), this.alias, state.getImbrication(), PajeGrammar.fileId);
-			PajeGrammar.db.insert(sql);	
-			
+
+
 		} else {
 			throw new Exception("Trying to Pop a State of type " + type.getAlias()
 					+ " that was not previously Pushed in line " + traceEvent.getLine());
 		}
-		
-		//remove from stack since it is in DB
-		if (!this.stackStates.isEmpty() && this.stackStates.containsKey(type)) { 
+
+		// remove from stack since it is in DB
+		if (this.stackStates.isEmpty() || !this.stackStates.containsKey(type)) {
 			this.stackStates.get(type).remove(state);
-			
-		} else {
+
+			// } else {
 			throw new Exception("Trying to Pop a State of type " + type.getAlias()
 					+ " that was not previously Pushed in line " + traceEvent.getLine());
 		}
@@ -281,11 +320,18 @@ public class PajeContainer extends PajeNamedEntity {
 		// check if the type for the event exists in container
 		if (this.getEntities().isEmpty() || !this.getEntities().containsKey(type))
 			this.getEntities().put(type, new ArrayList<PajeEntity>());
-		//not necessary since it is in db
+		// not necessary since it is in db
 		this.getEntities().get(type).add(newEvent);
-		
-		String sql = PajeGrammar.db.generateInsertEventSQL(time, type.alias, this.alias, value.getAlias(), PajeGrammar.fileId);
-		PajeGrammar.db.insert(sql);
+
+		//String sql = PajeGrammar.db.generateInsertEventSQL(time, type.alias, this.alias, value.getAlias(),
+		//		PajeGrammar.fileId);
+		//PajeGrammar.db.insert(sql);
+		PajeGrammar.simulator.stmtEvent.setDouble(1, time);
+		PajeGrammar.simulator.stmtEvent.setString(2, type.alias);
+		PajeGrammar.simulator.stmtEvent.setString(3, this.alias);
+		PajeGrammar.simulator.stmtEvent.setString(4, value.getAlias());
+		PajeGrammar.simulator.stmtEvent.setInt(5, PajeGrammar.fileId);
+		PajeGrammar.simulator.stmtEvent.addBatch();
 
 	}
 
@@ -314,9 +360,18 @@ public class PajeContainer extends PajeNamedEntity {
 
 		PajeUserVariable newValue = new PajeUserVariable(this, type, time, value, traceEvent);
 		this.getEntities().get(type).add(newValue);
+
+		//String sql = PajeGrammar.db.generateInsertVariableSQL(time, type.alias, this.alias, value, -1,
+		//		PajeGrammar.fileId);
+		//PajeGrammar.db.insert(sql);
 		
-		String sql = PajeGrammar.db.generateInsertVariableSQL(time, type.alias, this.alias, value, -1, PajeGrammar.fileId);
-		PajeGrammar.db.insert(sql);
+		PajeGrammar.simulator.stmtVariable.setDouble(1, time);
+		PajeGrammar.simulator.stmtVariable.setString(2, type.alias);
+		PajeGrammar.simulator.stmtVariable.setString(3, this.alias);
+		PajeGrammar.simulator.stmtVariable.setDouble(4, value);
+		PajeGrammar.simulator.stmtVariable.setDouble(5, -1);
+		PajeGrammar.simulator.stmtVariable.setInt(6, PajeGrammar.fileId);
+		PajeGrammar.simulator.stmtVariable.addBatch();
 	}
 
 	private void pajeAddVariable(PajeVariableEvent event) throws Exception {
@@ -332,9 +387,9 @@ public class PajeContainer extends PajeNamedEntity {
 		checkTimeOrder(event);
 
 		PajeEntity last = this.getEntities().get(type).get(this.getEntities().get(type).size() - 1);
-		//get the first var to get the time it was set
+		// get the first var to get the time it was set
 		PajeEntity first = this.getEntities().get(type).get(0);
-		
+
 		if (((PajeUserVariable) last).getStartTime() == time) {
 			((PajeUserVariable) last).addValue(value);
 			return;
@@ -346,9 +401,18 @@ public class PajeContainer extends PajeNamedEntity {
 		// add variable with new value
 		PajeUserVariable newValue = new PajeUserVariable(this, type, time, lastVal + value, traceEvent);
 		this.getEntities().get(type).add(newValue);
+
+		//String sql = PajeGrammar.db.generateInsertVariableSQL(((PajeUserVariable) first).getStartTime(), type.alias,
+		//		this.alias, newValue.getValue(), time, PajeGrammar.fileId);
+		//PajeGrammar.db.insert(sql);
 		
-		String sql = PajeGrammar.db.generateInsertVariableSQL(((PajeUserVariable) first).getStartTime(), type.alias, this.alias, newValue.getValue(), time, PajeGrammar.fileId);
-		PajeGrammar.db.insert(sql);
+		PajeGrammar.simulator.stmtVariable.setDouble(1, ((PajeSingleTimedEntity) first).getStartTime());
+		PajeGrammar.simulator.stmtVariable.setString(2, type.alias);
+		PajeGrammar.simulator.stmtVariable.setString(3, this.alias);
+		PajeGrammar.simulator.stmtVariable.setDouble(4, newValue.getValue());
+		PajeGrammar.simulator.stmtVariable.setDouble(5, time);
+		PajeGrammar.simulator.stmtVariable.setInt(6, PajeGrammar.fileId);
+		PajeGrammar.simulator.stmtVariable.addBatch();
 	}
 
 	private void pajeSubVariable(PajeVariableEvent event) throws Exception {
@@ -364,9 +428,9 @@ public class PajeContainer extends PajeNamedEntity {
 		checkTimeOrder(event);
 
 		PajeEntity last = this.getEntities().get(type).get(this.getEntities().get(type).size() - 1);
-		//get the first var to get the time it was set
+		// get the first var to get the time it was set
 		PajeEntity first = this.getEntities().get(type).get(0);
-		
+
 		if (((PajeUserVariable) last).getStartTime() == time) {
 			((PajeUserVariable) last).subValue(value);
 			return;
@@ -378,9 +442,18 @@ public class PajeContainer extends PajeNamedEntity {
 		// add variable with new value
 		PajeUserVariable newValue = new PajeUserVariable(this, type, time, lastVal - value, traceEvent);
 		this.getEntities().get(type).add(newValue);
+
+		//String sql = PajeGrammar.db.generateInsertVariableSQL(((PajeUserVariable) first).getStartTime(), type.alias,
+			//	this.alias, newValue.getValue(), time, PajeGrammar.fileId);
+		//PajeGrammar.db.insert(sql);
 		
-		String sql = PajeGrammar.db.generateInsertVariableSQL(((PajeUserVariable) first).getStartTime(), type.alias, this.alias, newValue.getValue(), time, PajeGrammar.fileId);
-		PajeGrammar.db.insert(sql);
+		PajeGrammar.simulator.stmtVariable.setDouble(1, ((PajeSingleTimedEntity) first).getStartTime());
+		PajeGrammar.simulator.stmtVariable.setString(2, type.alias);
+		PajeGrammar.simulator.stmtVariable.setString(3, this.alias);
+		PajeGrammar.simulator.stmtVariable.setDouble(4, newValue.getValue());
+		PajeGrammar.simulator.stmtVariable.setDouble(5, time);
+		PajeGrammar.simulator.stmtVariable.setInt(6, PajeGrammar.fileId);
+		PajeGrammar.simulator.stmtVariable.addBatch();
 	}
 
 	public void pajeStartLink(PajeLinkEvent event) throws Exception {
@@ -416,14 +489,26 @@ public class PajeContainer extends PajeNamedEntity {
 
 			checkTimeOrder(event);
 
-			//probably not necessary
+			// probably not necessary
 			if (!this.getEntities().containsKey(type))
 				this.getEntities().put(type, new ArrayList<PajeEntity>());
 
 			this.getEntities().get(type).add(link);
+
+			//String sql = PajeGrammar.db.generateInsertLinkSQL(link.getStartTime(), link.getEndTime(), key,
+				//	link.getValue().getAlias(), type.alias, link.getStartContainer().alias,
+					//link.getEndContainer().alias, PajeGrammar.fileId);
+			//PajeGrammar.db.insert(sql);
 			
-			String sql = PajeGrammar.db.generateInsertLinkSQL(link.getStartTime(), link.getEndTime(), key, link.getValue().getAlias(), type.alias, link.getStartContainer().alias, link.getEndContainer().alias, PajeGrammar.fileId);
-			PajeGrammar.db.insert(sql);
+			PajeGrammar.simulator.stmtLink.setDouble(1, link.getStartTime());
+			PajeGrammar.simulator.stmtLink.setDouble(2, link.getEndTime());
+			PajeGrammar.simulator.stmtLink.setString(3, link.getKey());
+			PajeGrammar.simulator.stmtLink.setString(4, link.getValue().getAlias());
+			PajeGrammar.simulator.stmtLink.setString(5, link.getType().alias);
+			PajeGrammar.simulator.stmtLink.setString(6, link.getStartContainer().alias);
+			PajeGrammar.simulator.stmtLink.setString(7, link.getEndContainer().alias);
+			PajeGrammar.simulator.stmtLink.setInt(8, PajeGrammar.fileId);
+			PajeGrammar.simulator.stmtLink.addBatch();
 
 			pendingLinks.get(type).remove(key);
 			if (!linksUsedKeys.containsKey(type))
@@ -463,7 +548,7 @@ public class PajeContainer extends PajeNamedEntity {
 			if (!link.getValue().equals(value))
 				throw new Exception("Illegal PajeEndLink in " + traceEvent.getLine()
 						+ ", value is different from the value of the corresponding PajeStartLink (which had "
-						+ link.getValue().getAlias() + ")");	
+						+ link.getValue().getAlias() + ")");
 
 			checkTimeOrder(event);
 
@@ -471,9 +556,21 @@ public class PajeContainer extends PajeNamedEntity {
 				this.getEntities().put(type, new ArrayList<PajeEntity>());
 
 			this.getEntities().get(type).add(link);
+
+			//String sql = PajeGrammar.db.generateInsertLinkSQL(link.getStartTime(), link.getEndTime(), key,
+			//		link.getValue().getAlias(), type.alias, link.getStartContainer().alias,
+			//		link.getEndContainer().alias, PajeGrammar.fileId);
+			//PajeGrammar.db.insert(sql);
 			
-			String sql = PajeGrammar.db.generateInsertLinkSQL(link.getStartTime(), link.getEndTime(), key, link.getValue().getAlias(), type.alias, link.getStartContainer().alias, link.getEndContainer().alias, PajeGrammar.fileId);
-			PajeGrammar.db.insert(sql);
+			PajeGrammar.simulator.stmtLink.setDouble(1, link.getStartTime());
+			PajeGrammar.simulator.stmtLink.setDouble(2, link.getEndTime());
+			PajeGrammar.simulator.stmtLink.setString(3, link.getKey());
+			PajeGrammar.simulator.stmtLink.setString(4, link.getValue().getAlias());
+			PajeGrammar.simulator.stmtLink.setString(5, link.getType().alias);
+			PajeGrammar.simulator.stmtLink.setString(6, link.getStartContainer().alias);
+			PajeGrammar.simulator.stmtLink.setString(7, link.getEndContainer().alias);
+			PajeGrammar.simulator.stmtLink.setInt(8, PajeGrammar.fileId);
+			PajeGrammar.simulator.stmtLink.addBatch();
 
 
 			pendingLinks.get(type).remove(key);
@@ -511,8 +608,15 @@ public class PajeContainer extends PajeNamedEntity {
 			if (stackStates.containsKey(event.getType())) {
 				for (PajeUserState state : this.stackStates.get(event.getType())) {
 					state.setEndTime(event.getTime());
-					String sql = PajeGrammar.db.generateInsertStateSQL(state.getStartTime(), state.getEndTime(), state.getType().alias, state.getValue().getAlias(), this.alias, state.getImbrication(), PajeGrammar.fileId);
-					PajeGrammar.db.insert(sql);
+					PajeGrammar.simulator.stmtState.setString(1, this.alias);
+					PajeGrammar.simulator.stmtState.setString(2, state.getType().alias);
+					PajeGrammar.simulator.stmtState.setDouble(3, state.getStartTime());
+					PajeGrammar.simulator.stmtState.setDouble(4, state.getEndTime());
+					PajeGrammar.simulator.stmtState.setString(5, state.getValue().getAlias());
+					PajeGrammar.simulator.stmtState.setDouble(6, state.getImbrication());
+					PajeGrammar.simulator.stmtState.setInt(7, PajeGrammar.fileId);
+					
+					PajeGrammar.simulator.stmtState.addBatch();
 				}
 			}
 		}
